@@ -25,6 +25,10 @@ myApp.config(function ($stateProvider, $urlRouterProvider) {
             url: "/",
             templateUrl: "partials/home.html"
         })
+        .state('login', {
+            url: "/login",
+            templateUrl: "partials/login.html"
+        })
         .state('about', {
             url: "/about",
             templateUrl: "partials/about.html"
@@ -46,12 +50,12 @@ myApp.config(function ($stateProvider, $urlRouterProvider) {
 
 
 // this is run after angular is instantiated and bootstrapped
-//myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTService) {
-//
-//    // *****
-//    // Eager load some data using simple REST client
-//    // *****
-//
+myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTService) {
+
+    // *****
+    // Eager load some data using simple REST client
+    // *****
+
 //    $rootScope.restService = RESTService;
 //
 //    // async load data do be used in table (playgound grid widget)
@@ -59,35 +63,30 @@ myApp.config(function ($stateProvider, $urlRouterProvider) {
 //    $rootScope.restService.get('data/generic-list.json', function (data) {
 //        $rootScope.listData = data;
 //    });
-//
-//    // *****
-//    // Initialize authentication
-//    // *****
-//    $rootScope.authService = AuthService;
-//
-//    // text input for login/password (only)
-//    $rootScope.loginInput = 'user@gmail.com';
-//    $rootScope.passwordInput = 'complexpassword';
-//
-//    $rootScope.$watch('authService.authorized()', function () {
-//
-//        // if never logged in, do nothing (otherwise bookmarks fail)
-//        if ($rootScope.authService.initialState()) {
-//            // we are public browsing
-//            return;
-//        }
-//
-//        // when user logs in, redirect to home
-//        if ($rootScope.authService.authorized()) {
-//            $location.path("/");
-//            $rootScope.authNotifier.notify('information', 'Welcome ' + $rootScope.authService.currentUser() + "!");
-//        }
-//
-//        // when user logs out, redirect to home
-//        if (!$rootScope.authService.authorized()) {
-//            $location.path("/");
-//        }
-//
-//    }, true);
-//
-//});
+
+    // *****
+    // Initialize authentication
+    // *****
+    $rootScope.authService = AuthService;
+
+    $rootScope.$watch('authService.authorized()', function () {
+
+        // if never logged in, do nothing (otherwise bookmarks fail)
+        if ($rootScope.authService.initialState()) {
+            // we are public browsing
+            return;
+        }
+
+        // when user logs in, redirect to home
+        if ($rootScope.authService.authorized()) {
+            $location.path("/");
+        }
+
+        // when user logs out, redirect to home
+        if (!$rootScope.authService.authorized()) {
+            $location.path("/");
+        }
+
+    }, true);
+
+});

@@ -1,3 +1,16 @@
+myApp.controller('HomeCtrl',['$scope', function ($scope) {
+
+
+}]);
+
+myApp.controller('NavCtrl',['$scope', function ($scope) {
+
+    // This is used so both the login button and "enter" keypress can be tied to the same login action
+    $scope.submitLoginForm = function () {
+        $scope.authService.login($scope.email, $scope.password);
+    }
+}]);
+
 
 myApp.controller('PlaygroundCtrl',
     ['$scope', '$routeParams', '$http', function ($scope, $routeParams, $http) {

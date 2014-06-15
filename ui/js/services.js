@@ -22,22 +22,52 @@ myApp.factory('RESTService',
 // simple auth service that can use a lot of work... 
 myApp.factory('AuthService',
     function () {
-        var currentUser = null;
-        var authorized = false;
+        var currentUser = null, authorized = false,
+            isConsumer = false;
 
-        // initMaybe it wasn't meant to work for mpm?ial state says we haven't logged in or out yet...
-        // this tells us we are in public browsing
+        // not sure what this is for, gonna remove it later
         var initialState = true;
+
+        //TODO: get rid of this fake validation
+        var isConsumerEmail = function (email) {
+            return email && email === 'consumer@gmail.com';
+        };
+
+        var isProviderEmail = function (email) {
+            return email && email === 'provider@gmail.com';
+        };
+
+        var isValidEmail = function (email) {
+            return isConsumerEmail(email) || isProviderEmail(email);
+        };
+
+        var isValidPassword = function (password) {
+            return password && password === 'password';
+        };
+
+        var dismissLoginModal = function () {
+            if ($('#loginModal') && $('#loginModal').modal) {
+
+                $('#loginModal').modal('hide');
+            }
+        }
 
         return {
             initialState:function () {
                 return initialState;
             },
-            login:function (name, password) {
-                currentUser = name;
-                authorized = true;
-                //console.log("Logged in as " + name);
-                initialState = false;
+            login:function (email, password) {
+
+                authorized = isValidEmail(email) && isValidPassword(password);
+
+                if (authorized) {
+                    isConsumer = isConsumerEmail(email);
+
+                    currentUser = isConsumer ? 'Consumer' : 'Provider';
+                    initialState = false;
+
+                    dismissLoginModal();
+                }
             },
             logout:function () {
                 currentUser = null;
@@ -49,8 +79,11 @@ myApp.factory('AuthService',
             currentUser:function () {
                 return currentUser;
             },
-            authorized:function () {
-                return authorized;
+            isConsumer:function () {
+                return authorized && isConsumer;
+            },
+            isProvider:function () {
+                return authorized && !isConsumer;
             }
         };
     }
