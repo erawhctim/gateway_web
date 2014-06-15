@@ -25,6 +25,14 @@ myApp.config(function ($stateProvider, $urlRouterProvider) {
             url: "/",
             templateUrl: "partials/home.html"
         })
+        .state('consumerHome', {
+            url: "/",
+            templateUrl: "partials/mainSearch.html"
+        })
+        .state('providerHome', {
+            url: "/",
+            templateUrl: "partials/mainSearch.html" //TODO: change this later
+        })
         .state('login', {
             url: "/login",
             templateUrl: "partials/login.html"

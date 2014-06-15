@@ -21,7 +21,7 @@ myApp.factory('RESTService',
 
 // simple auth service that can use a lot of work... 
 myApp.factory('AuthService',
-    function () {
+    function ($state) {
         var currentUser = null, authorized = false,
             isConsumer = false;
 
@@ -50,7 +50,20 @@ myApp.factory('AuthService',
 
                 $('#loginModal').modal('hide');
             }
-        }
+        };
+
+        /**
+         * Shows the correct home page based on whether a consumer or provider is
+         * logged in, or redirects back to the main home page if you log out.
+         */
+        var goHome = function () {
+            //transition to main search page
+            if (authorized) {
+                $state.transitionTo(isConsumer ? 'consumerHome' : 'providerHome');
+            } else {
+                $state.transitionTo('home');
+            }
+        };
 
         return {
             initialState:function () {
@@ -67,11 +80,15 @@ myApp.factory('AuthService',
                     initialState = false;
 
                     dismissLoginModal();
+
+                    goHome();
                 }
             },
             logout:function () {
                 currentUser = null;
                 authorized = false;
+
+                goHome();
             },
             isLoggedIn:function () {
                 return authorized;
