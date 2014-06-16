@@ -30,13 +30,11 @@ myApp.factory('AuthService',
 
         //TODO: get rid of this fake validation
         var isConsumerEmail = function (email) {
-//            return email && email === 'consumer@gmail.com';
-            return email === 'c';
+            return email && email === 'consumer@gmail.com';
         };
 
         var isProviderEmail = function (email) {
-//            return email && email === 'provider@gmail.com';
-            return email === 'p';
+            return email && email === 'provider@gmail.com';
         };
 
         var isValidEmail = function (email) {
@@ -44,8 +42,7 @@ myApp.factory('AuthService',
         };
 
         var isValidPassword = function (password) {
-//            return password && password === 'password';
-            return true;
+            return password && password === 'password';
         };
 
         var dismissLoginModal = function () {

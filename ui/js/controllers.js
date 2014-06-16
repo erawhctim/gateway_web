@@ -12,7 +12,9 @@ myApp.controller('ListingsCtrl', ['$scope', function ($scope) {
 
 myApp.controller('SearchCtrl', ['$scope', function ($scope) {
 
-    $scope.searchQuery = "";
+    $scope.searchQuery = $scope.authService.isConsumer()
+        ? ""
+        : "mechanic";
 
 }]);
 

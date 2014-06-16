@@ -23,19 +23,19 @@
         </div>
 
         <!-- listings -->
-        <div class="listings" ng-controller="ListingsCtrl" ng-show="authService.isConsumer()">
+        <div class="listings" ng-controller="ListingsCtrl">
 
-            <h2 class="listing-header" ng-if="listings.length == 0">You have no listings</h2>
+            <h2 class="listing-header" ng-if="authService.isConsumer() && listings.length == 0">You have no listings</h2>
+            <h2 class="listing-header" ng-if="authService.isConsumer() && listings.length > 0">Your listings:</h2>
 
-            <h2 class="listing-header" ng-if="listings.length > 0">Your listings:</h2>
+            <h2 class="listing-header" ng-if="authService.isProvider() && listings.length > 0">Search Results:</h2>
 
             <table>
                 <tbody ng-if="listings.length > 0">
                     <tr ng-repeat="listing in listings">
 
-                        <td class="listing-title">{{listing.title}}</td>
-
-                        <td ng-if="listing.date">Due: {{listing.date}}</td>
+                        <td ng-show="authService.isConsumer()" class="listing-title">{{listing.title}}</td>
+                        <td ng-show="authService.isConsumer()" ng-if="listing.date">Due: {{listing.date}}</td>
 
                     </tr>
                 </tbody>
