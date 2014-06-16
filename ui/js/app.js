@@ -44,6 +44,10 @@ myApp.config(function ($stateProvider, $urlRouterProvider) {
         .state('help', {
             url: "/help",
             templateUrl: "partials/help.html"
+        .state('createListing', {
+        	url:"/createListing",
+        	templateUrl: "partials/createListing.html"
+        })
         });
 
 /** this is an example state with a bundled controller */

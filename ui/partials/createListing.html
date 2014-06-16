@@ -1,0 +1,41 @@
+<div ng-controller="createListCtrl">
+	<!-- Create Listing Modal Dialog -->
+	    <div class="modal fade" id="createListingModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	        <div class="modal-dialog">
+	            <div class="modal-content">
+	
+	                <div class="modal-header">
+	
+	                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">Ã—</button>
+	                    <h4 class="modal-title">Create Listing</h4>
+	
+	                </div>
+	                <div class="modal-body">
+	
+	                    <span id="listingTitleText">Title</span>
+	                    <input ng-model="text" type="text" placeholder="Title" name="listingTitle" required>
+	                    <!-- TODO Insert a category dropdown menu here -->
+	                    <span id="listingDescText">Description</span>
+	                    <input ng-model="textarea" placeholder="Description" name="listingDesc" required>
+	                    <span id="listingDateText">Date (optional)</span>
+	                    <input type="date" id="listingDate" name="listingDate" ng-model="value"
+	       				placeholder="yyyy-MM-dd" min="2013-01-01" max="2013-12-31" />
+	                    <span id="listingTimeText">Time (optional)</span>
+	                    <input type="time" id="listingTime" name="listingTime" ng-model="value"
+	       				placeholder="HH:mm" min="00:00" max="23:59" />
+	       				<span id="listingDateText">Address (optional)</span>
+	       				<input type="text" id="listingAddr" name="listingAddr" ng-model="textarea" />
+	       				<a class="btn btn-primary" ng-click="getCurrentLocation()">Use Current Location</a>
+	
+	                </div>
+	                
+	                <div class="modal-footer">
+	                    <a class="btn btn-primary" ng-click="submitListForm()">Post</a>
+	                    <a class="btn btn-primary" class="close" data-dismiss="modal">Cancel</a>
+	                </div>
+	
+	            </div>
+	        </div>
+	    </div>
+    <!-- End listing -->
+    </div>

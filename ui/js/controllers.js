@@ -81,7 +81,7 @@ myApp.controller('PlaygroundCtrl',
 //        $scope.alerts.push({type: type, title: 'Alert!', content: 'This is another alert...'});
 //    };
 //    $scope.button = {active: true};
-//    $scope.buttonSelect = {price: '89,99', currency: 'â‚¬'};
+//    $scope.buttonSelect = {price: '89,99', currency: 'Ã¢â€šÂ¬'};
 //    $scope.checkbox = {left: false, middle: true, right: false};
 //    $scope.radio = {left: false, middle: true, right: false};
 //    $scope.radioValue = 'middle';
@@ -97,4 +97,9 @@ myApp.controller('PlaygroundCtrl',
 //        $scope.master = user;
 //    }
 
+}]);
+
+myApp.controller('createListCtrl',['$scope', function ($scope) {
+
+	
 }]);
