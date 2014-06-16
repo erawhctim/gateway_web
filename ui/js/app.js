@@ -23,19 +23,11 @@ myApp.config(function ($stateProvider, $urlRouterProvider) {
     $stateProvider
         .state('home', {
             url: "/",
-            templateUrl: "partials/home.html"
+            templateUrl: "partials/landing-page.html"
         })
-        .state('consumerHome', {
+        .state('logged-in', {
             url: "/",
-            templateUrl: "partials/mainSearch.html"
-        })
-        .state('providerHome', {
-            url: "/",
-            templateUrl: "partials/mainSearch.html" //TODO: change this later
-        })
-        .state('login', {
-            url: "/login",
-            templateUrl: "partials/login.html"
+            templateUrl: "partials/main.html"
         })
         .state('about', {
             url: "/about",
@@ -44,22 +36,12 @@ myApp.config(function ($stateProvider, $urlRouterProvider) {
         .state('help', {
             url: "/help",
             templateUrl: "partials/help.html"
+        })
         .state('createListing', {
         	url:"/createListing",
         	templateUrl: "partials/createListing.html"
         })
-        });
-
-/** this is an example state with a bundled controller */
-//        .state('state2.list', {
-//            url: "/list",
-//            templateUrl: "partials/state2.list.html",
-//            controller: function($scope) {
-//                $scope.things = ["A", "Set", "Of", "Things"];
-//            }
-//        })
 });
-
 
 // this is run after angular is instantiated and bootstrapped
 myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTService) {
@@ -68,13 +50,13 @@ myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTSer
     // Eager load some data using simple REST client
     // *****
 
-//    $rootScope.restService = RESTService;
-//
-//    // async load data do be used in table (playgound grid widget)
-//    $rootScope.listData = [];
-//    $rootScope.restService.get('data/generic-list.json', function (data) {
-//        $rootScope.listData = data;
-//    });
+    $rootScope.restService = RESTService;
+
+
+    $rootScope.listings = [];
+    $rootScope.restService.get('data/listings.json', function (data) {
+        $rootScope.listings = data;
+    });
 
     // *****
     // Initialize authentication

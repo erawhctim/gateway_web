@@ -30,11 +30,13 @@ myApp.factory('AuthService',
 
         //TODO: get rid of this fake validation
         var isConsumerEmail = function (email) {
-            return email && email === 'consumer@gmail.com';
+//            return email && email === 'consumer@gmail.com';
+            return email === 'c';
         };
 
         var isProviderEmail = function (email) {
-            return email && email === 'provider@gmail.com';
+//            return email && email === 'provider@gmail.com';
+            return email === 'p';
         };
 
         var isValidEmail = function (email) {
@@ -42,7 +44,8 @@ myApp.factory('AuthService',
         };
 
         var isValidPassword = function (password) {
-            return password && password === 'password';
+//            return password && password === 'password';
+            return true;
         };
 
         var dismissLoginModal = function () {
@@ -57,12 +60,7 @@ myApp.factory('AuthService',
          * logged in, or redirects back to the main home page if you log out.
          */
         var goHome = function () {
-            //transition to main search page
-            if (authorized) {
-                $state.transitionTo(isConsumer ? 'consumerHome' : 'providerHome');
-            } else {
-                $state.transitionTo('home');
-            }
+            $state.transitionTo(authorized ? 'logged-in' : 'home');
         };
 
         return {
@@ -101,6 +99,10 @@ myApp.factory('AuthService',
             },
             isProvider:function () {
                 return authorized && !isConsumer;
+            },
+            consumerLoggedIn:function () {
+                authorized = true;
+                isConsumer = true;
             }
         };
     }

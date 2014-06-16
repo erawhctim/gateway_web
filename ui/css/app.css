@@ -6,7 +6,7 @@ html {
 
 /* This is to make sure the nav-bar doesn't overlay our content */
 body {
-    padding-top: 70px;
+    padding-top: 100px;
 }
 
 /* anchor tags should use pointer like buttons */
@@ -120,4 +120,34 @@ supports grid feature
 .sign-in-btn {
     margin-right: 30px;
 }
+
+.sidebar {
+    float: left;
+    padding: 15px 50px 15px 15px;
+    width: 250px;
+}
+
+.under-nav {
+    padding-top: 15px;
+}
+
+.listings {
+    padding-top: 55px;
+}
+.listings tr {
+    margin: 5px;
+}
+.listings td {
+    font-size: 22px;
+}
+.listing-title {
+    width: 700px;
+    padding-left: 5px;
+}
+.listing-header {
+    padding-left: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #000;
+}
+
 

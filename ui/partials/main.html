@@ -1,0 +1,46 @@
+<div>
+    <div class="sidebar under-nav">
+        <!-- side nav items -->
+        <ul class="nav nav-pills nav-stacked">
+            <li class="active"><a href="">Home</a></li>
+            <li><a href="">Profile</a></li>
+            <li><a href="">Help</a></li>
+        </ul>
+    </div>
+
+    <div class="under-nav col-lg-7">
+
+        <!-- search bar & button -->
+        <div ng-controller="SearchCtrl">
+            <div class="input-group input-group-lg search-bar">
+                <input type="text" class="form-control"
+                       ng-model="searchQuery" placeholder="What are you looking for?">
+
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button">Search</button>
+                </span>
+            </div>
+        </div>
+
+        <!-- listings -->
+        <div class="listings" ng-controller="ListingsCtrl" ng-show="authService.isConsumer()">
+
+            <h2 class="listing-header" ng-if="listings.length == 0">You have no listings</h2>
+
+            <h2 class="listing-header" ng-if="listings.length > 0">Your listings:</h2>
+
+            <table>
+                <tbody ng-if="listings.length > 0">
+                    <tr ng-repeat="listing in listings">
+
+                        <td class="listing-title">{{listing.title}}</td>
+
+                        <td ng-if="listing.date">Due: {{listing.date}}</td>
+
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

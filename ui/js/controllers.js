@@ -1,13 +1,57 @@
-myApp.controller('HomeCtrl',['$scope', function ($scope) {
+
+
+myApp.controller('NewListingCtrl', ['$scope', function ($scope) {
 
 
 }]);
 
-myApp.controller('NavCtrl',['$scope', function ($scope) {
+myApp.controller('ListingsCtrl', ['$scope', function ($scope) {
+
+
+}]);
+
+myApp.controller('SearchCtrl', ['$scope', function ($scope) {
+
+    $scope.searchQuery = "";
+
+}]);
+
+myApp.controller('NavCtrl', ['$scope', '$filter', function ($scope, $filter) {
+
 
     // This is used so both the login button and "enter" keypress can be tied to the same login action
     $scope.submitLoginForm = function () {
         $scope.authService.login($scope.email, $scope.password);
+    };
+
+    $scope.clear = function () {
+        $scope.title = null;
+        $scope.description = null;
+        $scope.date = null;
+    }
+
+    $scope.show = function () {
+        $scope.clear();
+        $('#newListingModal').modal('show');
+    };
+    $scope.hide = function () {
+        $('#newListingModal').modal('hide');
+    };
+
+    $scope.submitListing = function () {
+        var newItem = {
+            "title" : $scope.title,
+            "description" : $scope.description,
+            "owner" : "John"
+        };
+
+        if ($scope.date) {
+            newItem["date"] = $filter('date')($scope.date, "MM/dd/yy")
+        }
+
+        $scope.listings.push(newItem);
+
+        $scope.hide();
     }
 }]);
 

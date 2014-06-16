@@ -1,15 +1,9 @@
 <div ng-controller="NavCtrl">
 
-   
     <!-- Navbar -->
     <nav class="navbar navbar-default navbar-fixed-top">
         <div class="navbar-header">
             <a class="navbar-brand" href="#">Gateway</a>
-        </div>
-        
-        
-        <div class="navbar-header">
-            <a href="#createListingModal" role="button" class="btn btn-primary" data-toggle="modal">Create Listing</a>
         </div>
 
         <div class="nav navbar-form pull-right">
@@ -19,6 +13,7 @@
             </div>
 
             <div ng-show="authService.isLoggedIn()">
+                <a class="btn btn-primary" ng-show="authService.isConsumer()" ng-click="show()">Create a new listing</a>
                 <a class="btn btn-primary" >Hello, {{authService.currentUser()}}</a>
                 <a class="btn btn-primary" ng-click="authService.logout()">Sign out</a>
             </div>
@@ -28,9 +23,8 @@
     <!-- End Navbar -->
 
 
-
     <!-- Login Modal Dialog -->
-    <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModal" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
 
@@ -43,12 +37,12 @@
                 <div class="modal-body">
 
                     <span id="login-email">Email</span>
-                    <input ng-model="email" type="text" placeholder="Email" name='username'>
+                    <input ng-model="email" type="text" placeholder="Email" name='username' autofocus="autofocus">
 
                     <span id="login-password">Password</span>
                     <input ng-model="password" type="password" placeholder="Password" name='password'
                            ng-keyup="$event.keyCode == 13 && submitLoginForm()" type="submit">
-                           <!-- used to trigger the login on an "enter" keypress -->
+                    <!-- used to trigger the login on an "enter" keypress -->
 
                 </div>
                 <div class="modal-footer">
@@ -59,5 +53,48 @@
         </div>
     </div>
     <!-- End login -->
+
+
+
+    <!-- Create Listing Modal Dialog -->
+    <div class="modal fade" id="newListingModal" tabindex="-1" role="dialog" aria-labelledby="newListingModal"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">Ã—</button>
+                    <h4 class="modal-title">Create Listing</h4>
+
+                </div>
+                <div class="modal-body">
+
+                    <span id="listingTitleText">Title</span>
+                    <input ng-model="title" type="text" placeholder="Title" name="listingTitle" required>
+
+                    <!-- TODO Insert a category dropdown menu here -->
+
+                    <span id="listingDescText">Description</span>
+                    <input ng-model="description" placeholder="Description" name="listingDesc" required>
+
+                    <span id="listingDateText">Date (optional)</span>
+                    <input type="date" id="listingDate" name="listingDate" ng-model="date"
+                           placeholder="MM/dd/yy" min="06/01/14" max="12/31/14"/>
+
+                    <span id="listingAddrText">Address (optional)</span>
+                    <input type="text" id="listingAddr" name="listingAddr" ng-model="address"/>
+                    <a class="btn btn-primary" ng-click="getCurrentLocation()">Use Current Location</a>
+
+                </div>
+
+                <div class="modal-footer">
+                    <a class="btn btn-primary" ng-click="submitListing()">Post</a>
+                    <a class="btn btn-primary" class="close" data-dismiss="modal">Cancel</a>
+                </div>
+
+            </div>
+        </div>
+    </div>
 
 </div>
