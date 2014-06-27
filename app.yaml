@@ -30,13 +30,14 @@ handlers:
 
   static_dir: ui/bower_components
 
-- url: /(.*\.(html))
+- url: /partials/(.*\.(html))
 
   mime_type: text/html
 
   static_files: ui/partials/\1
 
   upload: ui/partials/(.*\.(html))
+
 - url: /
 
   mime_type: text/html
