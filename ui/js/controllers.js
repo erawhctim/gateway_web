@@ -1,22 +1,115 @@
+/** google global namespace for Google projects. */
 
+var google = google || {};
+
+/** appengine namespace for Google Developer Relations projects. */
+google.appengine = google.appengine || {};
+
+google.appengine.gateway = google.appengine.gateway || {};
+
+// Function on initialization
+google.appengine.gateway.init = function(apiRoot) {
+	var apisToLoad;
+	var callback = function() {
+		if(--apisToLoad == 0) {
+			//google.appengine.gateway.postListing();
+		}
+	}
+
+	apisToLoad = 1;
+	gapi.client.load('gateway','v1',callback,apiRoot);	
+};
 
 myApp.controller('NewListingCtrl', ['$scope', function ($scope) {
 
 
 }]);
 
+myApp.controller('SidebarCtrl', ['$scope' , '$state', '$rootScope', function($scope, $state, $rootScope) {
+	$scope.setPage = function(page) {
+		$state.transitionTo(page);
+		gapi.client.gateway.listings.getListByUser({'id':'consumer'}).execute(function(resp) {
+			$rootScope.myListResults = resp.listings;
+			$rootScope.$apply();
+		});
+	};
+
+	$scope.getActive = function(page) {
+		if($state.is(page))
+		{
+			return "active";
+		}
+		else 
+		{
+			return "";
+		}
+
+		$scope.$apply();
+	}
+}]);
+
+
+// Get all the listings
+// This will likely be depracated
 myApp.controller('ListingsCtrl', ['$scope', function ($scope) {
 
+	// Print the current listings
+	$scope.getCurListings = function() 
+	{
+		gapi.client.gateway.listings.getListings(
+			{'maxResults':'10', 'sortOrder':'newest'}).execute(function(resp) {
+			$scope.curListings = resp.listings;			
+			$scope.$apply();
+		});
+	};
+}]);
+
+// Search for a keyword
+myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope,$rootScope,$state) {
+
+    // Perform a search using built-in Google function
+    $scope.searchListings = function()
+    {
+	var keyword = $scope.searchQuery;
+	gapi.client.gateway.listings.searchListings(
+	{'search_keyword':keyword,'num_search_listings':'10'}).execute(function(resp) {
+			$scope.searchResults = resp.listings;
+			$scope.$apply();
+	});
+    }
+
+
+    $scope.moveToListingPage = function(documentId)
+	{
+		$state.transitionTo('listing-page');
+		gapi.client.gateway.listings.getDocById({'idx':documentId}).execute(function(resp) {
+			$rootScope.selectedListing = resp;
+			$rootScope.$apply();
+		});
+	}
 
 }]);
 
-myApp.controller('SearchCtrl', ['$scope', function ($scope) {
+myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$state,$rootScope) {
+	
+	$scope.getMyListings = function()
+	{
+		gapi.client.gateway.listings.getListByUser({'id':'consumer'}).execute(function(resp) {
+			$scope.myListResults = resp.listings;
+			$scope.$apply();
+		});
+	}
 
-    $scope.searchQuery = $scope.authService.isConsumer()
-        ? ""
-        : "mechanic";
-
+	$scope.moveToListingPage = function(documentId)
+	{
+		$state.transitionTo('listing-page');
+		gapi.client.gateway.listings.getDocById({'idx':documentId}).execute(function(resp) {
+			$rootScope.selectedListing = resp;
+			$rootScope.$apply();
+		});
+	}
 }]);
+		
 
 myApp.controller('NavCtrl', ['$scope', '$filter', function ($scope, $filter) {
 
@@ -44,16 +137,26 @@ myApp.controller('NavCtrl', ['$scope', '$filter', function ($scope, $filter) {
         var newItem = {
             "title" : $scope.title,
             "description" : $scope.description,
-            "owner" : "John"
+            "owner" : $scope.authService.currentUser()
         };
 
         if ($scope.date) {
             newItem["date"] = $filter('date')($scope.date, "MM/dd/yy")
         }
 
-        $scope.listings.push(newItem);
+	gapi.client.gateway.listings.postListing(
+	{'date':newItem["date"],
+	'title':newItem["title"],
+	//'location':document.querySelector('#listingAddr').value,
+	'description':newItem["description"],
+	'owner':newItem["owner"]
+	}).execute();
+
+        //$scope.listings.push(newItem);
 
         $scope.hide();
+
+	$scope.$apply();
     }
 }]);
 
@@ -149,3 +252,4 @@ myApp.controller('createListCtrl',['$scope', function ($scope) {
 
 	
 }]);
+

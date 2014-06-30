@@ -1,0 +1,22 @@
+<!-- search bar & button -->
+<div ng-controller="SearchCtrl" class="under-nav col-lg-7">
+	<div class="input-group input-group-lg search-bar">
+		<input type="text" class="form-control"
+	       ng-model="searchQuery" placeholder="What are you looking for?" id="searchKeyword">
+
+		<span class="input-group-btn">
+	    		<button class="btn btn-default" ng-click='searchListings()' type="button">Search</button>
+		</span>
+
+	</div>
+
+	<div class="search-list">
+		<div ng-if="searchResults.length > 0">
+			Search Results:
+			<ul ng-repeat="listing in searchResults">
+				<li class="listing-title"><a href="" ng-click="moveToListingPage(listing.doc_id)">{{listing.title}}</a></li>
+				<text class="listing-desc"> {{listing.description}} </text>
+			</ul>
+		</div> 
+	</div>
+</div>

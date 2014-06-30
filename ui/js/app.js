@@ -26,7 +26,7 @@ myApp.config(function ($stateProvider, $urlRouterProvider) {
             templateUrl: "partials/landing-page.html"
         })
         .state('logged-in', {
-            url: "/",
+            url: "/logged-in",
             templateUrl: "partials/main.html"
         })
         .state('about', {
@@ -41,6 +41,14 @@ myApp.config(function ($stateProvider, $urlRouterProvider) {
         	url:"/createListing",
         	templateUrl: "partials/createListing.html"
         })
+	.state('search', {
+		url:"/search",
+		templateUrl: "partials/search.html"
+	})
+	.state('listing-page', {
+		url:"/listing-page",
+		templateUrl: "partials/listing-page.html"
+	})
 });
 
 // this is run after angular is instantiated and bootstrapped
@@ -52,11 +60,12 @@ myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTSer
 
     $rootScope.restService = RESTService;
 
-
+/*
     $rootScope.listings = [];
     $rootScope.restService.get('data/listings.json', function (data) {
         $rootScope.listings = data;
     });
+*/
 
     // *****
     // Initialize authentication

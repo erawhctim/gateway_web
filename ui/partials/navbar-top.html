@@ -13,7 +13,7 @@
             </div>
 
             <div ng-show="authService.isLoggedIn()">
-                <a class="btn btn-primary" ng-show="authService.isConsumer()" ng-click="show()">Create a new listing</a>
+                <a class="btn btn-primary" ng-click="show()">Create a new listing</a>
                 <a class="btn btn-primary" >Hello, {{authService.currentUser()}}</a>
                 <a class="btn btn-primary" ng-click="authService.logout()">Sign out</a>
             </div>
@@ -71,12 +71,12 @@
                 <div class="modal-body">
 
                     <span id="listingTitleText">Title</span>
-                    <input ng-model="title" type="text" placeholder="Title" name="listingTitle" required>
+                    <input ng-model="title" type="text" placeholder="Title" name="listingTitle" id="listingTitle" required>
 
                     <!-- TODO Insert a category dropdown menu here -->
 
                     <span id="listingDescText">Description</span>
-                    <input ng-model="description" placeholder="Description" name="listingDesc" required>
+                    <input ng-model="description" placeholder="Description" name="listingDesc" id="listingDesc" required>
 
                     <span id="listingDateText">Date (optional)</span>
                     <input type="date" id="listingDate" name="listingDate" ng-model="date"
@@ -90,6 +90,7 @@
 
                 <div class="modal-footer">
                     <a class="btn btn-primary" ng-click="submitListing()">Post</a>
+		    <!-- <a class="btn btn-primary" id="post-btn">Post </a> -->
                     <a class="btn btn-primary" class="close" data-dismiss="modal">Cancel</a>
                 </div>
 

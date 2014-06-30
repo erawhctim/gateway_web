@@ -1,69 +1,35 @@
 application: gateway-sample
-
 version: 1
-
 runtime: python27
-
 threadsafe: true
-
 api_version: 1
 
-
-
 handlers:
-
 # Static handlers
-
 - url: /js
-
   mime_type: text/javascript
-
   static_dir: ui/js
-
 - url: /css
-
   mime_type: text/css
-
   static_dir: ui/css
-
 - url: /bower_components
-
   static_dir: ui/bower_components
-
 - url: /partials/(.*\.(html))
-
   mime_type: text/html
-
   static_files: ui/partials/\1
-
   upload: ui/partials/(.*\.(html))
-
 - url: /
-
   mime_type: text/html
-
   static_files: ui/index.html
-
   upload: ui/index.html
 
-
-
 # Endpoints handler
-
 - url: /_ah/spi/.*
-
   script: gateway_api.APPLICATION
 
 
-
-
-
 libraries:
-
 - name: pycrypto
-
   version: latest
-
 - name: endpoints
-
   version: 1.0

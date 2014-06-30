@@ -83,7 +83,7 @@ myApp.factory('AuthService',
                 currentUser = null;
                 authorized = false;
 
-                goHome();
+		goHome();
             },
             isLoggedIn:function () {
                 return authorized;

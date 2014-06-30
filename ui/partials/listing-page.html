@@ -1,0 +1,11 @@
+<div class="under-nav col-lg-7">
+	<h1> {{selectedListing.title}} </h1>
+	
+	<span> 
+		<div ng-if="authService.isProvider()"> <button class="btn btn-default" class="active" ng-click='' type="button">I'll do it!</button> </div>
+		<div> User: {{selectedListing.owner}}</div>
+		<div> What I need: {{selectedListing.description}}</div>
+		<div ng-if="selectedListing.date"> When I need it: {{selectedListing.date}}</div>
+	</span> 
+
+</div>
