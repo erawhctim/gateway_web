@@ -27,14 +27,23 @@ myApp.controller('NewListingCtrl', ['$scope', function ($scope) {
 
 myApp.controller('SidebarCtrl', ['$scope' , '$state', '$rootScope', function($scope, $state, $rootScope) {
 	$scope.setPage = function(page) {
+		// Change to proper state
 		$state.transitionTo(page);
-		gapi.client.gateway.listings.getListByUser({'id':'consumer'}).execute(function(resp) {
-			$rootScope.myListResults = resp.listings;
-			$rootScope.$apply();
-		});
+		// Used for knowing when to display "no results"
+		if(page != 'logged-in')
+			$rootScope.hasSearched = false;
+		// Refresh user listings on home page
+		else
+		{
+			gapi.client.gateway.listings.getListByUser({'id':'consumer'}).execute(function(resp) {
+				$rootScope.myListResults = resp.listings;
+				$rootScope.$apply();
+			});
+		}
 	};
 
-	$scope.getActive = function(page) {
+	// Return if the given state is active to know when to highlight 	 // sidebar item
+	$scope.getActivePage = function(page) {
 		if($state.is(page))
 		{
 			return "active";
@@ -46,6 +55,7 @@ myApp.controller('SidebarCtrl', ['$scope' , '$state', '$rootScope', function($sc
 
 		$scope.$apply();
 	}
+
 }]);
 
 
@@ -68,6 +78,7 @@ myApp.controller('ListingsCtrl', ['$scope', function ($scope) {
 myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope,$rootScope,$state) {
 
     // Perform a search using built-in Google function
+    // Number of returned search listings is hard coded to 10 for now
     $scope.searchListings = function()
     {
 	var keyword = $scope.searchQuery;
@@ -76,9 +87,10 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 			$scope.searchResults = resp.listings;
 			$scope.$apply();
 	});
+	$rootScope.hasSearched = true;
     }
 
-
+    // Go to the listing page template to show info on individual listing
     $scope.moveToListingPage = function(documentId)
 	{
 		$state.transitionTo('listing-page');
@@ -90,6 +102,7 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 
 }]);
 
+// Controller for 
 myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$state,$rootScope) {
 	
 	$scope.getMyListings = function()

@@ -21,7 +21,7 @@ myApp.factory('RESTService',
 
 // simple auth service that can use a lot of work... 
 myApp.factory('AuthService',
-    function ($state) {
+    function ($state,$rootScope) {
         var currentUser = null, authorized = false,
             isConsumer = false;
 
@@ -77,6 +77,12 @@ myApp.factory('AuthService',
                     dismissLoginModal();
 
                     goHome();
+
+		    // Get current listings
+		    gapi.client.gateway.listings.getListByUser({'id':'consumer'}).execute(function(resp) {
+			$rootScope.myListResults = resp.listings;
+			$rootScope.$apply();
+		    });
                 }
             },
             logout:function () {

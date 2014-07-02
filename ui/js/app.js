@@ -13,6 +13,26 @@ var myApp = angular.module('myApp',
 var filters = angular.module('myApp.filters', []);
 var directives = angular.module('myApp.directives', []);
 
+var google = google || {};
+
+/** appengine namespace for Google Developer Relations projects. */
+google.appengine = google.appengine || {};
+
+google.appengine.gateway = google.appengine.gateway || {};
+
+// Function on initialization
+google.appengine.gateway.init = function(apiRoot) {
+	var apisToLoad;
+	var callback = function() {
+		if(--apisToLoad == 0) {
+			//google.appengine.gateway.postListing();
+		}
+	}
+
+	apisToLoad = 1;
+	gapi.client.load('gateway','v1',callback,apiRoot);	
+};
+
 
 myApp.config(function ($stateProvider, $urlRouterProvider) {
 
@@ -52,13 +72,15 @@ myApp.config(function ($stateProvider, $urlRouterProvider) {
 });
 
 // this is run after angular is instantiated and bootstrapped
-myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTService) {
+myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTService,$state) {
 
     // *****
     // Eager load some data using simple REST client
     // *****
 
     $rootScope.restService = RESTService;
+
+    $rootScope.hasSearched = false;
 
 /*
     $rootScope.listings = [];
@@ -82,6 +104,10 @@ myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTSer
 
         // when user logs in, redirect to home
         if ($rootScope.authService.authorized()) {
+	    gapi.client.gateway.listings.getListByUser({'id':'consumer'}).execute(function(resp) {
+			$rootScope.myListResults = resp.listings;
+			$rootScope.$apply();
+		});
             $location.path("/");
         }
 
@@ -89,7 +115,6 @@ myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTSer
         if (!$rootScope.authService.authorized()) {
             $location.path("/");
         }
-
-    }, true);
+    });
 
 });

@@ -1,8 +1,6 @@
 <div class="under-nav col-lg-7" ng-controller="myListCtrl">
 	<div>
 		<h1> My Requests </h1>
-		<!-- get listings by ID -->
-		<!-- <span> {{getMyListings()}} </span> -->
 		<div class="my-list">
 			<div ng-if="myListResults.length > 0 && authService.isConsumer()">
 				<ul ng-repeat="listing in myListResults">
@@ -10,11 +8,12 @@
 					<text class="listing-desc"> {{listing.description}} </text>
 				</ul>
 			</div> 
+			
 		</div>
 	</div>
 
 	<div>
-		<h1> My Bids </h1>
+		<h1> Watched Posts </h1>
 		<!-- gets listings by provider -->
 	</div>
 </div>

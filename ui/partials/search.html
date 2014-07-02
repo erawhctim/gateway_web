@@ -5,12 +5,17 @@
 	       ng-model="searchQuery" placeholder="What are you looking for?" id="searchKeyword">
 
 		<span class="input-group-btn">
-	    		<button class="btn btn-default" ng-click='searchListings()' type="button">Search</button>
+	    		<button class="btn btn-default enabled" ng-click='searchListings()' type="button">Search</button>
 		</span>
 
 	</div>
 
 	<div class="search-list">
+		<div>
+			<text ng-hide="searchResults.length > 0 || !hasSearched">
+				"{{searchQuery}}" returned no results.
+			</text>
+		</div>
 		<div ng-if="searchResults.length > 0">
 			Search Results:
 			<ul ng-repeat="listing in searchResults">
