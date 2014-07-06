@@ -13,8 +13,8 @@
             </div>
 
             <div ng-show="authService.isLoggedIn()">
-                <a class="btn btn-primary" ng-click="show()">Create a new listing</a>
-                <a class="btn btn-primary" >Hello, {{authService.currentUser()}}</a>
+                <a class="btn btn-primary" ng-click="show('#newListingModal')">Create a new listing</a>
+                <a class="btn btn-primary" href="#logged-in">Hello, {{authService.currentUser()}}</a>
                 <a class="btn btn-primary" ng-click="authService.logout()">Sign out</a>
             </div>
 
@@ -30,14 +30,14 @@
 
                 <div class="modal-header">
 
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">Ã—</button>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&#10006</button>
                     <h4 class="modal-title">Login</h4>
 
                 </div>
                 <div class="modal-body">
 
-                    <span id="login-email">Email</span>
-                    <input ng-model="email" type="text" placeholder="Email" name='username' autofocus="autofocus">
+                    <span id="login-email">Username</span>
+                    <input ng-model="email" type="text" placeholder="Username" name='username' autofocus="autofocus">
 
                     <span id="login-password">Password</span>
                     <input ng-model="password" type="password" placeholder="Password" name='password'
@@ -45,7 +45,9 @@
                     <!-- used to trigger the login on an "enter" keypress -->
 
                 </div>
+
                 <div class="modal-footer">
+		    <a role="button" data-toggle="modal" ng-click="show('#newUserModal') && hide('#loginModal')" data-dismiss="modal">Register</a> 
                     <a class="btn btn-primary" ng-disabled="!email || !password" ng-click="submitLoginForm()">Log in</a>
                 </div>
 
@@ -53,6 +55,42 @@
         </div>
     </div>
     <!-- End login -->
+
+    <!-- New user Dialog -->
+    <div class="modal fade" id="newUserModal" tabindex="-1" role="dialog" aria-labelledby="newUserModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&#10006</button>
+                    <h4 class="modal-title">Register</h4>
+
+                </div>
+                <div class="modal-body">
+
+                    <span id="email">Email</span>
+                    <input ng-model="newEmailField" type="text" placeholder="Email" name='username' autofocus="autofocus">
+
+		    <span id="user-username">Username</span>
+                    <input ng-model="newUsernameField" type="text" placeholder="Pick a username" name='newUsername' autofocus="autofocus">
+
+                    <span id="user-password">Password</span>
+                    <input ng-model="newPasswordField" type="password" placeholder="Password" name='password'
+
+                           ng-keyup="$event.keyCode == 13 && submitUserForm()" type="submit">
+                    <!-- used to trigger the login on an "enter" keypress -->
+
+                </div>
+
+                <div class="modal-footer">
+                    <a class="btn btn-primary" ng-disabled="!newEmailField || !newPasswordField || !newUsernameField" ng-click="submitUserForm()" data-dismiss="modal">Create User</a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- End new user -->
 
 
 
@@ -64,7 +102,7 @@
 
                 <div class="modal-header">
 
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">Ã—</button>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&#10006</button>
                     <h4 class="modal-title">Create Listing</h4>
 
                 </div>
@@ -90,7 +128,6 @@
 
                 <div class="modal-footer">
                     <a class="btn btn-primary" ng-click="submitListing()">Post</a>
-		    <!-- <a class="btn btn-primary" id="post-btn">Post </a> -->
                     <a class="btn btn-primary" class="close" data-dismiss="modal">Cancel</a>
                 </div>
 

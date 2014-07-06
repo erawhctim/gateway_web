@@ -13,27 +13,7 @@ var myApp = angular.module('myApp',
 var filters = angular.module('myApp.filters', []);
 var directives = angular.module('myApp.directives', []);
 
-var google = google || {};
-
-/** appengine namespace for Google Developer Relations projects. */
-google.appengine = google.appengine || {};
-
-google.appengine.gateway = google.appengine.gateway || {};
-
-// Function on initialization
-google.appengine.gateway.init = function(apiRoot) {
-	var apisToLoad;
-	var callback = function() {
-		if(--apisToLoad == 0) {
-			//google.appengine.gateway.postListing();
-		}
-	}
-
-	apisToLoad = 1;
-	gapi.client.load('gateway','v1',callback,apiRoot);	
-};
-
-
+// configure states and router
 myApp.config(function ($stateProvider, $urlRouterProvider) {
 
     // For any unmatched url, redirect to home
@@ -81,13 +61,6 @@ myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTSer
     $rootScope.restService = RESTService;
 
     $rootScope.hasSearched = false;
-
-/*
-    $rootScope.listings = [];
-    $rootScope.restService.get('data/listings.json', function (data) {
-        $rootScope.listings = data;
-    });
-*/
 
     // *****
     // Initialize authentication

@@ -28,23 +28,6 @@ myApp.factory('AuthService',
         // not sure what this is for, gonna remove it later
         var initialState = true;
 
-        //TODO: get rid of this fake validation
-        var isConsumerEmail = function (email) {
-            return email && email === 'consumer@gmail.com';
-        };
-
-        var isProviderEmail = function (email) {
-            return email && email === 'provider@gmail.com';
-        };
-
-        var isValidEmail = function (email) {
-            return isConsumerEmail(email) || isProviderEmail(email);
-        };
-
-        var isValidPassword = function (password) {
-            return password && password === 'password';
-        };
-
         var dismissLoginModal = function () {
             if ($('#loginModal') && $('#loginModal').modal) {
 
@@ -66,24 +49,28 @@ myApp.factory('AuthService',
             },
             login:function (email, password) {
 
-                authorized = isValidEmail(email) && isValidPassword(password);
+		// Call backend API for logging in
+		gapi.client.gateway.listings.loginUser({'username':email,'password':password}).execute( function(resp) {
+			authorized = resp.boolResult;
+			// This needs to be in the function for it to wait for the response			
+			if (authorized) {
 
-                if (authorized) {
-                    isConsumer = isConsumerEmail(email);
+                    		currentUser = email;
+                    		initialState = false;
 
-                    currentUser = isConsumer ? 'Consumer' : 'Provider';
-                    initialState = false;
+                    		dismissLoginModal();
 
-                    dismissLoginModal();
+                    		goHome();
 
-                    goHome();
+		    		// Get current listings
+		    		gapi.client.gateway.listings.getListByUser({'id':currentUser}).execute(function(resp) {
+					$rootScope.myListResults = resp.listings;
+					$rootScope.$apply();
+		    		});
+                	}
+		});
 
-		    // Get current listings
-		    gapi.client.gateway.listings.getListByUser({'id':'consumer'}).execute(function(resp) {
-			$rootScope.myListResults = resp.listings;
-			$rootScope.$apply();
-		    });
-                }
+                
             },
             logout:function () {
                 currentUser = null;
@@ -96,16 +83,6 @@ myApp.factory('AuthService',
             },
             currentUser:function () {
                 return currentUser;
-            },
-            isConsumer:function () {
-                return authorized && isConsumer;
-            },
-            isProvider:function () {
-                return authorized && !isConsumer;
-            },
-            consumerLoggedIn:function () {
-                authorized = true;
-                isConsumer = true;
             }
         };
     }

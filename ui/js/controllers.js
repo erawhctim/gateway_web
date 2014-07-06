@@ -20,6 +20,13 @@ google.appengine.gateway.init = function(apiRoot) {
 	gapi.client.load('gateway','v1',callback,apiRoot);	
 };
 
+
+
+// TODO: want posted listings to show up when you're on the home page even
+// after you just posted it.
+// Also some redundant functions here. May want to add them to the services.
+
+
 myApp.controller('NewListingCtrl', ['$scope', function ($scope) {
 
 
@@ -35,7 +42,7 @@ myApp.controller('SidebarCtrl', ['$scope' , '$state', '$rootScope', function($sc
 		// Refresh user listings on home page
 		else
 		{
-			gapi.client.gateway.listings.getListByUser({'id':'consumer'}).execute(function(resp) {
+			gapi.client.gateway.listings.getListByUser({'id':$rootScope.authService.currentUser()}).execute(function(resp) {
 				$rootScope.myListResults = resp.listings;
 				$rootScope.$apply();
 			});
@@ -50,10 +57,9 @@ myApp.controller('SidebarCtrl', ['$scope' , '$state', '$rootScope', function($sc
 		}
 		else 
 		{
-			return "";
+			return null;
 		}
 
-		$scope.$apply();
 	}
 
 }]);
@@ -61,6 +67,7 @@ myApp.controller('SidebarCtrl', ['$scope' , '$state', '$rootScope', function($sc
 
 // Get all the listings
 // This will likely be depracated
+/*
 myApp.controller('ListingsCtrl', ['$scope', function ($scope) {
 
 	// Print the current listings
@@ -73,6 +80,7 @@ myApp.controller('ListingsCtrl', ['$scope', function ($scope) {
 		});
 	};
 }]);
+*/
 
 // Search for a keyword
 myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope,$rootScope,$state) {
@@ -105,14 +113,16 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 // Controller for 
 myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$state,$rootScope) {
 	
+	// retrieve user listings
 	$scope.getMyListings = function()
 	{
-		gapi.client.gateway.listings.getListByUser({'id':'consumer'}).execute(function(resp) {
+		gapi.client.gateway.listings.getListByUser({'id':authService.currentUser()}).execute(function(resp) {
 			$scope.myListResults = resp.listings;
-			$scope.$apply();
+			//$scope.$apply();
 		});
 	}
 
+	// individual listing page
 	$scope.moveToListingPage = function(documentId)
 	{
 		$state.transitionTo('listing-page');
@@ -132,18 +142,46 @@ myApp.controller('NavCtrl', ['$scope', '$filter', function ($scope, $filter) {
         $scope.authService.login($scope.email, $scope.password);
     };
 
+    // submit the new user form
+    $scope.submitUserForm = function() {
+	var newUser = { 
+		"username" : $scope.newUsernameField,
+		"email" : $scope.newEmailField,
+		"password" : $scope.newPasswordField
+	};
+
+	var isValidUser = 0;
+	gapi.client.gateway.listings.newUser( {
+		'username' : $scope.newUsernameField,
+		'email' : $scope.newEmailField,
+		'password' : $scope.newPasswordField
+	}).execute(function (resp) {
+		var isValidUser = resp.boolResult;
+		if(isValidUser)
+		{
+			// Login with the same credentials
+			$scope.authService.login($scope.newUsernameField,$scope.newPasswordField);
+		}
+		else
+		{
+			// Show error dialog
+		}
+	});
+    }
+	
+    // TODO: need to have this clear out the modal fields of a given modal
     $scope.clear = function () {
         $scope.title = null;
         $scope.description = null;
         $scope.date = null;
     }
 
-    $scope.show = function () {
+    $scope.show = function (thisModal) {
         $scope.clear();
-        $('#newListingModal').modal('show');
+        $(thisModal).modal('show');
     };
-    $scope.hide = function () {
-        $('#newListingModal').modal('hide');
+    $scope.hide = function (thisModal) {
+        $(thisModal).modal('hide');
     };
 
     $scope.submitListing = function () {
@@ -165,11 +203,15 @@ myApp.controller('NavCtrl', ['$scope', '$filter', function ($scope, $filter) {
 	'owner':newItem["owner"]
 	}).execute();
 
-        //$scope.listings.push(newItem);
+        $scope.hide('#newListingModal');
 
-        $scope.hide();
+	// Update listings
+	// NOT WORKING
+	gapi.client.gateway.listings.getListByUser({'id':$scope.authService.currentUser()}).execute(function(resp) {
+		$scope.myListResults = resp.listings;
+		$scope.$apply();
+	});
 
-	$scope.$apply();
     }
 }]);
 
@@ -177,87 +219,6 @@ myApp.controller('NavCtrl', ['$scope', '$filter', function ($scope, $filter) {
 myApp.controller('PlaygroundCtrl',
     ['$scope', '$routeParams', '$http', function ($scope, $routeParams, $http) {
 
-    // add service name to the scope...
-//    $scope.widgetName = $routeParams.widgetName;
-//
-//    // tree support
-//    $scope.deleteNode = function (data) {
-//        data.nodes = [];
-//    };
-//
-//    $scope.addNode = function (data) {
-//        var post = data.nodes.length + 1;
-//        var newName = data.name + '-' + post;
-//        data.nodes.push({name: newName, nodes: []});
-//    };
-//
-//    $scope.tree = [
-//        {name: "Node", nodes: []}
-//    ];
-//
-//
-//    // data grid
-//    createDataGrid($scope, $http, 'playground/emp.json');
-//
-//    $scope.setPage = function (pageNo) {
-//        $scope.currentPage = pageNo;
-//    };
-//
-//    // date
-//    $scope.date2 = null;
-//
-//    $scope.addChild = function () {
-//        $scope.events.push({
-//            title: 'Open Sesame',
-//            start: new Date(y, m, 28),
-//            end: new Date(y, m, 29)
-//        });
-//    }
-//
-//    $scope.remove = function (index) {
-//        $scope.events.splice(index, 1);
-//    }
-//
-//    // alerts (angular ui)
-//    $scope.alertSet = [
-//        { type: 'error', msg: 'Oh snap! Change a few things up and try submitting again.' },
-//        { type: 'success', msg: 'Well done! You successfully read this important alert message.' }
-//    ];
-//
-//    $scope.addToAlertSet = function () {
-//        $scope.alertSet.push({msg: "Another alert!"});
-//    };
-//
-//    $scope.closeTheAlert = function (index) {
-//        $scope.alertSet.splice(index, 1);
-//    };
-//
-//    // angularstrap
-//    $scope.modal2 = {content: 'Hello Modal', saved: false};
-//    $scope.tooltip = {title: "Hello Tooltip<br />This is a multiline message!", checked: false};
-//    $scope.popover = {content: "Hello Popover<br />This is a multiline message!", saved: false};
-//    $scope.alerts = [
-//        {type: 'success', title: 'Hello!', content: 'This is a success msg.<br><br><pre>2 + 3 = {{ 2 + 3 }}</pre>'}
-//    ];
-//    $scope.addAlert = function (type) {
-//        $scope.alerts.push({type: type, title: 'Alert!', content: 'This is another alert...'});
-//    };
-//    $scope.button = {active: true};
-//    $scope.buttonSelect = {price: '89,99', currency: 'Ã¢â€šÂ¬'};
-//    $scope.checkbox = {left: false, middle: true, right: false};
-//    $scope.radio = {left: false, middle: true, right: false};
-//    $scope.radioValue = 'middle';
-//    $scope.typeahead = ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Dakota", "North Carolina", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"];
-//    $scope.datepicker = {dateStrap: '12/12/2012'};
-//    $scope.timepicker = {timeStrap: '05:30 PM'};
-//
-//    // form validation and binding
-//    $scope.master = "";
-//
-//    $scope.saveForm = function (user) {
-//        console.log("User..." + $scope.user);
-//        $scope.master = user;
-//    }
 
 }]);
 

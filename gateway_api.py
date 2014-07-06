@@ -19,9 +19,15 @@ from protorpc import remote
 from datetime import datetime
 from google.appengine.ext import ndb
 from google.appengine.api import search
+from google.appengine.api import mail
 import logging
 
-WEB_CLIENT_ID = 'replace this with your web client application ID'
+#from endpoints_proto_datastore.ndb import EndpointsModel
+
+# Online ID
+WEB_CLIENT_ID = '609564210575-hv0i5mf6cleccjikfre5kl6uc2jamrsl.apps.googleusercontent.com'
+# Local ID
+#WEB_CLIENT_ID = '609564210575-k5g1qq23gg5d4li2qbqbc47c2cbuq6gp.apps.googleusercontent.com'
 ANDROID_CLIENT_ID = 'replace this with your Android client ID'
 IOS_CLIENT_ID = 'replace this with your iOS client ID'
 ANDROID_AUDIENCE = WEB_CLIENT_ID
@@ -32,7 +38,9 @@ package = 'gateway'
 # Entire database will use one index for now
 # TODO: Can hold unlimited amount of documents up to 10GB, probably enough
 #       but may alter in the future.
-index = search.Index(name="myListings")
+listIndex = search.Index(name="myListings")
+userIndex = search.Index(name="myUsers")
+
 
 # Remove all documents in the DB
 def delete_all_documents(index_name):
@@ -62,7 +70,7 @@ def doc_to_message(self):
 				providers=self.field('providers').value )
 
 # Post the document to the index given a message
-def put_doc_from_message(message):
+def put_list_from_message(message):
 	post_document = search.Document( fields=[
 			    search.TextField(name='date',value=message.date),
 			    search.TextField(name='title',value=message.title),
@@ -71,8 +79,25 @@ def put_doc_from_message(message):
 			    search.TextField(name='owner',value=message.owner),
 			    search.TextField(name='providers',value=message.providers) ])
 
-	index.put(post_document)
+	listIndex.put(post_document)
+	#ndb.put(post_document)
 	return post_document
+
+# Method to convert to a message so it may be returned
+def user_to_message(self):
+	return LoginFormMessage(  username=self.field('username').value,
+				  password=self.field('password').value
+		      )
+
+# Post the document to the index given a message
+def put_user_from_message(message):
+	user_document = search.Document( fields=[
+			    search.TextField(name='username',value=message.username),
+			    search.TextField(name='email',value=message.email),
+			    search.TextField(name='password',value=message.password) ])
+
+	userIndex.put(user_document)
+	return user_document
 
 # Define a message to return the index
 class DocumentIdx(messages.Message):
@@ -92,6 +117,7 @@ class Listing(messages.Message):
 class ListingList(messages.Message):
 	listings = messages.MessageField(Listing,1,repeated=True)
 
+# Used for ordering listings
 class ListingListRequest(messages.Message):
 	class order(messages.Enum):
 		newest = 1
@@ -100,8 +126,24 @@ class ListingListRequest(messages.Message):
 	maxResults = messages.IntegerField(1,default=100)
 	sortOrder = messages.EnumField(order,2,default=order.newest)
 
+# Define a user id
 class UserId(messages.Message):
 	id = messages.StringField(1)
+
+# Submission form of a new user
+class UserFormMessage(messages.Message):
+	username = messages.StringField(1,required=True)
+	email = messages.StringField(2,required=True)
+	password = messages.StringField(3,required=True)
+
+class LoginFormMessage(messages.Message):
+	username=messages.StringField(1,required=True)
+	password=messages.StringField(2,required=True)
+
+# Subclass of message just for returning booleans
+class messageBool(messages.Message):
+	boolResult=messages.IntegerField(1)
+	
 
 ###############################################################################
 # Endpoints gateway API
@@ -124,7 +166,7 @@ class GatewayApi(remote.Service):
                       name='listings.postListing')
     def post_listing(self,request):
 	# Post the document to DB
-	post_document = put_doc_from_message(request)
+	post_document = put_list_from_message(request)
 	return doc_to_message(post_document)
 
     # Endpoints method for printing out the current listings
@@ -132,7 +174,7 @@ class GatewayApi(remote.Service):
                       path='listlistings', http_method='GET',
                       name='listings.getListings')
     def get_doc_list(self,request):
-	docs = index.search(search.Query(""))
+	docs = listIndex.search(search.Query(""))
 	items = [doc_to_message(entity) for entity in docs]
 	return ListingList(listings=items)
 
@@ -150,7 +192,7 @@ class GatewayApi(remote.Service):
     def keyword_search(self,request):
 	q = search.Query(request.search_keyword,options=search.QueryOptions(request.num_search_listings))
 	try:
-		results = index.search(q)
+		results = listIndex.search(q)
 		listResults = [doc_to_message(entity) for entity in results]
 	except search.Error:
 		logging.exception('Search failed')
@@ -172,38 +214,57 @@ class GatewayApi(remote.Service):
     PROVIDER_RESOURCE = endpoints.ResourceContainer(
 		doc_idx=messages.StringField(1),
 		provider_name=messages.StringField(2))
-
-    # Endpoints method for adding someone to bid on the task
-    #@endpoints.method(PROVIDER_RESOURCE,DocumentIdx,
-#		      path='add-provide/{doc_idx}', http_method='POST',
-#		      name='listings.addProvider')
-   # def add_provider(self,request)
     
     # Endpoints method for getting a listing from its ID
     @endpoints.method(DocumentIdx, Listing,
                       path='get-doc-by-id', http_method='GET',
                       name='listings.getDocById')
     def get_doc_by_id(self,request):
-	doc = index.get(request.idx)
+	doc = listIndex.get(request.idx)
 	try:
 		return doc_to_message(doc)
 	except Exception,e:
 		logging.exception('Search by ID failed.')
 
     # Endpoints method for getting current listings for a user
-    # This needs a lot of work, need to generate numbers for users
-    # For now, we will just use this to retrieve a static user
     @endpoints.method(UserId, ListingList,
                       path='get-list-by-user', http_method='GET',
                       name='listings.getListByUser')
     def get_listings_by_user(self,request):
+	listResults = []	
 	try:
-		results = index.search("owner = " + request.id)
+		results = listIndex.search("owner = " + request.id)
 		listResults = [doc_to_message(entity) for entity in results]
 	except search.Error:
 		logging.exception('Search for listings failed')
 
 	return ListingList(listings=listResults)
-	
+
+
+    # Endpoints method for adding a user to the database
+    @endpoints.method(UserFormMessage, messageBool,
+                      path='new-user', http_method='POST',
+                      name='listings.newUser')
+    def new_user(self,request): 
+	# https://developers.google.com/appengine/docs/python/mail/
+	put_user_from_message(request)
+	return messageBool(boolResult=1)  
+
+    # Endpoints method for logging in
+    @endpoints.method(LoginFormMessage, messageBool,
+                      path='login-user', http_method='POST',
+                      name='listings.loginUser')
+    def login_user(self,request):
+	try:
+		result = userIndex.search("username = " + request.username)
+		for entity in result:
+			userResult = user_to_message(entity)
+			if (userResult.username == request.username) and (userResult.password == request.password):
+				return messageBool(boolResult=1)
+			else:
+				return messageBool(boolResult=0)
+	except Exception,e:
+		logging.exception('User name not found')
+		return messageBool(boolResult=0)
 
 APPLICATION = endpoints.api_server([GatewayApi])

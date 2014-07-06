@@ -2,7 +2,7 @@
 	<div>
 		<h1> My Requests </h1>
 		<div class="my-list">
-			<div ng-if="myListResults.length > 0 && authService.isConsumer()">
+			<div ng-if="myListResults.length > 0">
 				<ul ng-repeat="listing in myListResults">
 					<li class="listing-title"><a href="" ng-click="moveToListingPage(listing.doc_id)">{{listing.title}}</a></li>
 					<text class="listing-desc"> {{listing.description}} </text>
