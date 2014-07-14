@@ -79,12 +79,14 @@
                     <input ng-model="newPasswordField" type="password" placeholder="Password" name='password'
 
                            ng-keyup="$event.keyCode == 13 && submitUserForm()" type="submit">
+		    <span id="user-pswd-confirm"> Confirm Password</span>
+		    <input ng-model="confirmPassword" type="password" placeholder="Confirm password" name='confirm-pswd'>
                     <!-- used to trigger the login on an "enter" keypress -->
 
                 </div>
 
                 <div class="modal-footer">
-                    <a class="btn btn-primary" ng-disabled="!newEmailField || !newPasswordField || !newUsernameField" ng-click="submitUserForm()" data-dismiss="modal">Create User</a>
+                    <a class="btn btn-primary" ng-disabled="!newEmailField || !newPasswordField || !newUsernameField || (newPasswordField!=confirmPassword)" ng-click="submitUserForm()" data-dismiss="modal">Create User</a>
                 </div>
 
             </div>
@@ -119,15 +121,15 @@
                     <span id="listingDateText">Date (optional)</span>
                     <input type="date" id="listingDate" name="listingDate" ng-model="date"
                            placeholder="MM/dd/yy" min="06/01/14" max="12/31/14"/>
-
+<!--
                     <span id="listingAddrText">Address (optional)</span>
                     <input type="text" id="listingAddr" name="listingAddr" ng-model="address"/>
                     <a class="btn btn-primary" ng-click="getCurrentLocation()">Use Current Location</a>
-
+-->
                 </div>
 
                 <div class="modal-footer">
-                    <a class="btn btn-primary" ng-click="submitListing()">Post</a>
+                    <a class="btn btn-primary" ng-click="submitListing() && getMyListings()">Post</a>
                     <a class="btn btn-primary" class="close" data-dismiss="modal">Cancel</a>
                 </div>
 

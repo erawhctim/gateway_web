@@ -49,6 +49,10 @@ myApp.config(function ($stateProvider, $urlRouterProvider) {
 		url:"/listing-page",
 		templateUrl: "partials/listing-page.html"
 	})
+	.state('message', {
+		url:"/message",
+		templateUrl: "partials/message.html"
+	})
 });
 
 // this is run after angular is instantiated and bootstrapped
@@ -77,10 +81,6 @@ myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTSer
 
         // when user logs in, redirect to home
         if ($rootScope.authService.authorized()) {
-	    gapi.client.gateway.listings.getListByUser({'id':'consumer'}).execute(function(resp) {
-			$rootScope.myListResults = resp.listings;
-			$rootScope.$apply();
-		});
             $location.path("/");
         }
 
@@ -89,5 +89,13 @@ myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTSer
             $location.path("/");
         }
     });
+
+    // so the listings will change in real time after posting
+    /*$rootScope.$watch('myListResults', function() {
+	gapi.client.gateway.listings.getListByUser({'id':$rootScope.authService.currentUser()}).execute(function(resp) {
+			$rootScope.myListResults = resp.listings;
+			$rootScope.$apply();
+		});
+    });*/
 
 });

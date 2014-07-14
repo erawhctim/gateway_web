@@ -19,7 +19,7 @@
 		<div ng-if="searchResults.length > 0">
 			Search Results:
 			<ul ng-repeat="listing in searchResults">
-				<li class="listing-title"><a href="" ng-click="moveToListingPage(listing.doc_id)">{{listing.title}}</a></li>
+				<li class="listing-title"><a href="" ng-click="moveToListingPage(listing.list_id)">{{listing.title}}</a></li>
 				<text class="listing-desc"> {{listing.description}} </text>
 			</ul>
 		</div> 

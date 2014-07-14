@@ -2,16 +2,35 @@
 # gateway_api.py
 # Backend API for integration with client
 
+# Update 6/23/14: Post method works for adding listings to the database. Get
+# method works for returning a list of current listings.
+# 6/24/14 Added "delete all", search function
+# 6/25/14 Clean up code, remove old data structure, alter explicit returns
+
+# TODO: add some way of getting the users listings based on some input, add a
+# login feature/user scheme, 
+# Date structure verified on client side for now, would be good to add to 
+# back end.
+
+#import os
+#os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
 import endpoints
 from protorpc import messages
 from protorpc import message_types
 from protorpc import remote
 from datetime import datetime
-from google.appengine.ext import ndb
+from google.appengine.ext import db
 from google.appengine.api import search
 from google.appengine.api import mail
+#from django.core.validators import validate_email
 import logging
+
 import hashlib
+
+#import smtplib
+
+#from endpoints_proto_datastore.ndb import EndpointsModel
 
 # Online ID
 WEB_CLIENT_ID = '609564210575-hv0i5mf6cleccjikfre5kl6uc2jamrsl.apps.googleusercontent.com'
@@ -25,32 +44,33 @@ ANDROID_AUDIENCE = WEB_CLIENT_ID
 package = 'gateway'
 
 # Entire database will use one index for now
-# TODO: Depracate this
+# TODO: Can hold unlimited amount of documents up to 10GB, probably enough
+#       but may alter in the future.
 listIndex = search.Index(name="myListings")
 userIndex = search.Index(name="myUsers")
 
 ### Class definitions ###
 
-## ndb entities ##
-class user(ndb.Model):
-	username = ndb.StringProperty()
-	email = ndb.StringProperty()
-	password = ndb.StringProperty()
+## db entities ##
+class user(db.Model):
+	username = db.StringProperty()
+	email = db.StringProperty()
+	password = db.StringProperty()
 
-class modelListing(ndb.Expando):
+class modelListing(db.Expando):
 	# TODO: change this
-	date = ndb.StringProperty()
-	title = ndb.StringProperty(required=True)
-	location = ndb.StringProperty()
-	description = ndb.StringProperty(required=True)
-	list_id = ndb.IntegerProperty()
-	owner = ndb.StringProperty(required=True)
-	providers = ndb.StringProperty(repeated=True)
+	date = db.StringProperty()
+	title = db.StringProperty(required=True)
+	location = db.StringProperty()
+	description = db.StringProperty(required=True)
+	list_id = db.IntegerProperty()
+	owner = db.StringProperty(required=True)
+	providers = db.StringListProperty()
 
-class instMsg(ndb.Model):
-	origin=ndb.StringProperty()
-	dest=ndb.StringProperty()
-	content=ndb.StringProperty()
+class instMsg(db.Model):
+	origin=db.StringProperty()
+	dest=db.StringProperty()
+	content=db.StringProperty()
 
 ## Message subclasses ##
 
@@ -60,12 +80,15 @@ class ListingIdx(messages.Message):
 
 # Define a class for each listing
 class Listing(messages.Message):
+	class providerListClass(messages.Message):
+		provider = messages.StringField(1)
+
 	date = messages.StringField(1)
 	title = messages.StringField(2, required=True)
 	location = messages.StringField(3)
 	description = messages.StringField(4, required=True)
 	owner = messages.StringField(6, required=True)
-	providers = messages.StringField(7,repeated=True)
+	providers = messages.MessageField(providerListClass,7,repeated=True)
 	boolResult = messages.IntegerField(8)
 	list_id = messages.IntegerField(9)
 
@@ -119,8 +142,7 @@ class emailMessage(messages.Message):
 def inst_msg_to_rpc(im):
 	return instantMessage(userId=im.dest,content=im.content,origin=im.origin)
 
-# Remove all documents in the doc
-# TODO: depracate this
+# Remove all documents in the DB
 def delete_all_documents(index_name):
 
    	doc_index = search.Index(name=index_name)
@@ -137,8 +159,11 @@ def delete_all_documents(index_name):
 
 	return ListingIdx(idx=doc_index)
 
-# Method to convert a listing to a message so it may be returned
+# Method to convert to a message so it may be returned
 def list_to_message(message):
+	#if message.providers is None:
+	message.providers=providerListClass(['null'])
+	#providerListClass(message.providers)
 	return Listing(         date=message.date,
 				title=message.title,
 				location=message.location,
@@ -150,6 +175,7 @@ def list_to_message(message):
 
 # Post the document to the index given a message
 def put_list_from_message(message):
+	# Make an db instance
 	post_listing = modelListing(date=message.date,
 				    title=message.title,
 				    location=message.location,
@@ -157,11 +183,11 @@ def put_list_from_message(message):
 				    owner=message.owner,
 				    providers=message.providers)
 
-	# Post to the ndb
+	# Post to the DB
 	post_key = post_listing.put()
 	post_listing.list_id = post_key.id()
-	# Bit hackish, probably better way to do this
 	post_listing.put()
+	#return post_listing
 
 # Method to convert to a message so it may be returned
 def user_to_message(message):
@@ -169,7 +195,7 @@ def user_to_message(message):
 				  password=message.password
 		      )
 
-# Add a user to the database
+# Post the document to the index given a message
 def put_user_from_message(message):
 	temp = message.username
 	temp = user(username=message.username,
@@ -210,7 +236,7 @@ class GatewayApi(remote.Service):
                       path='post', http_method='POST',
                       name='listings.postListing')
     def post_listing(self,request):
-	# Post the listing to ndb
+	# Post the document to DB
 	try:
 		put_list_from_message(request)
 		return messageBool(boolResult=1)
@@ -218,23 +244,24 @@ class GatewayApi(remote.Service):
 		logging.exception('Listing post failed.')
 		raise endpoints.BadRequestException('Bad post request')
 
-	return messageBool(boolResult=0)
-
     # Endpoints method for printing out the current listings
     # Depracate this
     @endpoints.method(ListingListRequest, ListingList,
                       path='listlistings', http_method='GET',
                       name='listings.getListings')
     def get_doc_list(self,request):
-	# Query the ndb	
+	# Query the DB	
 	try:
-		curListings = modelListing.query()
-		items = [list_to_message(entity) for entity in curListings]
+		#docs = listIndex.search(search.Query(""))
+		q=modelListing.all()
+		items=db.get(q)
+		#curListings = modelListing.query()
+		items = [list_to_message(entity) for entity in q]
 	# Catch an exception in case calling the search API failed	
 	except Exception,e:
 		logging.exception('Print current listings failed.')
 		raise endpoints.BadRequestException('Items cannot be retrieved')
-
+	
 	# Calling search API failed or no listings present	
 	if items is None:
 		return ListingList(listings=None,boolResult=0)
@@ -254,6 +281,7 @@ class GatewayApi(remote.Service):
                       name='listings.searchListings')
     # Search by keyword using Google API
     def keyword_search(self,request):
+	#q = search.Query(request.search_keyword,options=search.QueryOptions(request.num_search_listings))
 	q = modelListing.query(modelListing.title.IN([request.search_keyword]))
 	# Try searching given the query above	
 	try:
@@ -269,7 +297,7 @@ class GatewayApi(remote.Service):
 	return ListingList(listings=listResults,boolResult=1)
 
     # Endpoints method for deleting all listings
-    # TODO: depracate this after we delete all docs from ndb
+    # TODO: depracate this after we delete all docs from DB
     @endpoints.method(message_types.VoidMessage, messageBool,
                       path='deleteall', http_method='DELETE',
                       name='listings.deleteAll')
@@ -294,10 +322,10 @@ class GatewayApi(remote.Service):
 	name='deleteElement')
     def delete_element(self,request):
 	if request.kind == 'listing':
-		ndb.Key('modelListing',int(request.id)).delete()
+		db.Key('modelListing',int(request.id)).delete()
 		return messageBool(boolResult=1)
 	if request.kind == 'user':
-		ndb.Key('user',int(request.id)).delete()
+		db.Key('user',int(request.id)).delete()
 		return messageBool(boolResult=1)
 	else:
 		raise endpoints.BadRequestException('Bad request. Check fields')
@@ -309,7 +337,8 @@ class GatewayApi(remote.Service):
                       name='listings.getListById')
     def get_doc_by_id(self,request):
 	try:
-		listing = ndb.Key( 'modelListing',int(request.idx) ).get()
+		listing = modelListing.get_by_id(int(request.idx))
+		#listing = db.get(q)
 	except Exception,e:
 		raise endpoints.BadRequestException('Cannot retrieve listing')
 
@@ -323,13 +352,15 @@ class GatewayApi(remote.Service):
                       path='get-list-by-user/{id}', http_method='GET',
                       name='listings.getListByUser')
     def get_listings_by_user(self,request):	
-	try:
-		results = modelListing.query(modelListing.owner == request.id)
-	except search.Error:
-		logging.exception('Search for listings failed')
-		raise endpoints.BadRequestException('Cannot retrieve listings')
+	q = modelListing.all()
+	q.filter("owner =",request.id)	
+	#try:
+		#results = modelListing.query(modelListing.owner == request.id)
+	#except search.Error:
+	#	logging.exception('Search for listings failed')
+	#	raise endpoints.BadRequestException('Cannot retrieve listings')
 
-	listResults = [list_to_message(entity) for entity in results]
+	listResults = [list_to_message(entity) for entity in q]
 	return ListingList(listings=listResults,boolResult=1)
 
 
@@ -364,10 +395,9 @@ class GatewayApi(remote.Service):
 			else:
 				return messageBool(boolResult=0)
 
-	return messageBool(boolResult=0)
+	raise endpoints.NotFoundException('User not found')
 
     ## Messaging endpoints ##
-    # TODO: doesn't work, take it out if getting rid of messaging service
     # Endpoints method for posting a message
     @endpoints.method(instantMessage, messageBool,
 		path='send-message', http_method='POST',	
@@ -391,7 +421,7 @@ class GatewayApi(remote.Service):
 		name='messages.get')
     def get_messages(self,request):	
 	try:
-		results = instMsg.query( ndb.OR((instMsg.origin == request.origin and instMsg.dest == request.dest),(instMsg.origin == request.dest and instMsg.dest == request.origin)) )
+		results = instMsg.query( db.OR((instMsg.origin == request.origin and instMsg.dest == request.dest),(instMsg.origin == request.dest and instMsg.dest == request.origin)) )
 	except Exception,e:
 		logging.exception('Message fetch failed')
 		raise endpoints.BadRequestException('Cannot retrieve messages')
@@ -409,6 +439,7 @@ class GatewayApi(remote.Service):
 		listing_id=messages.IntegerField(2))
 
     # Endpoints method for adding a user to the watch list of a listing
+    # TODO
     @endpoints.method(USER_WATCH_RESOURCE,messageBool,
 		      path='add-watch-user/{user}/{listing_id}',
 		      http_method='POST', name='listings.addWatchUser')
@@ -416,7 +447,8 @@ class GatewayApi(remote.Service):
 	# Add the given user to the list of providers for that listing
 	# Find listing by ID
 	try:
-		listing = ndb.Key( 'modelListing',int(request.listing_id) ).get()
+		q = db.Key.from_path( 'modelListing',int(request.listing_id) )
+		listing = db.get(q)
 	except Exception,e:
 		raise endpoints.BadRequestException('Cannot retrieve listing')
 
@@ -443,19 +475,5 @@ class GatewayApi(remote.Service):
 		return messageBool(boolResult=1)
 	except Exception,e:
 		raise endpoints.BadRequestException('Cannot send e-mail.')
-
-    # Endpoints method for getting the watched posts for the current user
-    @endpoints.method(UserId, ListingList,
-                      path='get-watch-by-user/{id}', http_method='GET',
-                      name='listings.getWatchByUser')
-    def get_watch_by_user(self,request):	
-	try:
-		results = modelListing.query( modelListing.providers.IN(request.id) )
-	except search.Error:
-		logging.exception('Search for listings failed')
-		raise endpoints.BadRequestException('Cannot retrieve listings')
-
-	listResults = [list_to_message(entity) for entity in results]
-	return ListingList(listings=listResults,boolResult=1)
 
 APPLICATION = endpoints.api_server([GatewayApi])

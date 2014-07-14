@@ -50,7 +50,7 @@ myApp.factory('AuthService',
             login:function (email, password) {
 
 		// Call backend API for logging in
-		gapi.client.gateway.listings.loginUser({'username':email,'password':password}).execute( function(resp) {
+		gapi.client.gateway.users.loginUser({'username':email,'password':password}).execute( function(resp) {
 			authorized = resp.boolResult;
 			// This needs to be in the function for it to wait for the response			
 			if (authorized) {
@@ -87,3 +87,18 @@ myApp.factory('AuthService',
         };
     }
 );
+
+/*
+myApp.factory('messService',
+	function($rootScope) {
+		updateMessages:function(userId) {
+			// Get the messages
+			// Get current listings
+		    		gapi.client.gateway.listings.getMessagesByUsers({'myId':$rootScope.currentUser,'theirId':userId}).execute(function(resp) {
+					$rootScope.myListResults = resp.listings;
+					$rootScope.$apply();
+		    	});
+			// Update the screen
+		}
+	}
+);	*/

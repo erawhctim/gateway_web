@@ -64,24 +64,6 @@ myApp.controller('SidebarCtrl', ['$scope' , '$state', '$rootScope', function($sc
 
 }]);
 
-
-// Get all the listings
-// This will likely be depracated
-/*
-myApp.controller('ListingsCtrl', ['$scope', function ($scope) {
-
-	// Print the current listings
-	$scope.getCurListings = function() 
-	{
-		gapi.client.gateway.listings.getListings(
-			{'maxResults':'10', 'sortOrder':'newest'}).execute(function(resp) {
-			$scope.curListings = resp.listings;			
-			$scope.$apply();
-		});
-	};
-}]);
-*/
-
 // Search for a keyword
 myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope,$rootScope,$state) {
 
@@ -98,11 +80,11 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 	$rootScope.hasSearched = true;
     }
 
-    // Go to the listing page template to show info on individual listing
-    $scope.moveToListingPage = function(documentId)
+    // individual listing page
+	$scope.moveToListingPage = function(documentId)
 	{
 		$state.transitionTo('listing-page');
-		gapi.client.gateway.listings.getDocById({'idx':documentId}).execute(function(resp) {
+		gapi.client.gateway.listings.getListById({'idx':documentId}).execute(function(resp) {
 			$rootScope.selectedListing = resp;
 			$rootScope.$apply();
 		});
@@ -114,11 +96,11 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$state,$rootScope) {
 	
 	// retrieve user listings
-	$scope.getMyListings = function()
+	$rootScope.getMyListings = function()
 	{
 		gapi.client.gateway.listings.getListByUser({'id':authService.currentUser()}).execute(function(resp) {
-			$scope.myListResults = resp.listings;
-			//$scope.$apply();
+			$rootScope.myListResults = resp.listings;
+			$rootScope.$apply();
 		});
 	}
 
@@ -126,7 +108,7 @@ myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$
 	$scope.moveToListingPage = function(documentId)
 	{
 		$state.transitionTo('listing-page');
-		gapi.client.gateway.listings.getDocById({'idx':documentId}).execute(function(resp) {
+		gapi.client.gateway.listings.getListById({'idx':documentId}).execute(function(resp) {
 			$rootScope.selectedListing = resp;
 			$rootScope.$apply();
 		});
@@ -134,7 +116,7 @@ myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$
 }]);
 		
 
-myApp.controller('NavCtrl', ['$scope', '$filter', function ($scope, $filter) {
+myApp.controller('NavCtrl', ['$scope', '$filter','$rootScope', function ($scope, $filter, $rootScope) {
 
 
     // This is used so both the login button and "enter" keypress can be tied to the same login action
@@ -151,7 +133,7 @@ myApp.controller('NavCtrl', ['$scope', '$filter', function ($scope, $filter) {
 	};
 
 	var isValidUser = 0;
-	gapi.client.gateway.listings.newUser( {
+	gapi.client.gateway.users.newUser( {
 		'username' : $scope.newUsernameField,
 		'email' : $scope.newEmailField,
 		'password' : $scope.newPasswordField
@@ -208,11 +190,20 @@ myApp.controller('NavCtrl', ['$scope', '$filter', function ($scope, $filter) {
 	// Update listings
 	// NOT WORKING
 	gapi.client.gateway.listings.getListByUser({'id':$scope.authService.currentUser()}).execute(function(resp) {
-		$scope.myListResults = resp.listings;
-		$scope.$apply();
+		$rootScope.myListResults = resp.listings;
+		$rootScope.$apply();
 	});
 
     }
+}]);
+
+myApp.controller('SelectedListingCtrl',['$scope','$rootScope', function($scope,$rootScope) {
+	$scope.sendEmail = function(recipient) {
+		// Find the owner's email
+		
+		gapi.client.gateway.sendMail({'user':$scope.authService.currentUser(),'recip':recipient}).execute();
+		gapi.client.gateway.listings.addWatchUser({'user':$scope.authService.currentUser(),'listing_id':$rootScope.selectedListing.list_id}).execute();
+	}
 }]);
 
 

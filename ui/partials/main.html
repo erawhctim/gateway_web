@@ -1,20 +1,21 @@
 <div class="under-nav col-lg-7" ng-controller="myListCtrl">
 	<div>
-		<h1> My Requests </h1>
+		<h1> My Listings </h1>
 		<div class="my-list">
+			<div ng-hide="myListResults.length > 0"> You have no current listings. </div>
 			<div ng-if="myListResults.length > 0">
 				<ul ng-repeat="listing in myListResults">
-					<li class="listing-title"><a href="" ng-click="moveToListingPage(listing.doc_id)">{{listing.title}}</a></li>
+					<li class="listing-title"><a href="" ng-click="moveToListingPage(listing.list_id)">{{listing.title}}</a></li>
 					<text class="listing-desc"> {{listing.description}} </text>
 				</ul>
 			</div> 
-			
 		</div>
 	</div>
 
 	<div>
-		<h1> Watched Posts </h1>
+		<h1> Watched Listings </h1>
 		<!-- gets listings by provider -->
+		<div> You are not watching any posts. </div>
 	</div>
 </div>
 	
