@@ -14,8 +14,19 @@
 
 	<div>
 		<h1> Watched Listings </h1>
-		<!-- gets listings by provider -->
-		<div> You are not watching any posts. </div>
+		<div class="my-list">
+			<!-- gets listings by provider -->
+			<div ng-hide="myWatchResults.length > 0"> You are not watching any posts. </div>
+
+
+			<div ng-if="myWatchResults.length > 0">
+				<ul ng-repeat="listing in myWatchResults">
+					<li class="listing-title"><a href="" ng-click="moveToListingPage(listing.list_id)">{{listing.title}}</a></li>
+					<text class="listing-desc"> {{listing.description}} </text>
+				</ul>
+			</div> 
+
+		</div>
 	</div>
 </div>
 	

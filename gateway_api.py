@@ -27,12 +27,13 @@ package = 'gateway'
 ### Class definitions ###
 
 ## ndb entities ##
-class user(ndb.Model):
+class user(ndb.Expando):
 	username = ndb.StringProperty()
 	email = ndb.StringProperty()
 	password = ndb.StringProperty()
 	overallRanking = ndb.IntegerProperty()
 	numRankings = ndb.IntegerProperty()
+	watchedListings = ndb.IntegerProperty(repeated=True)
 
 class modelListing(ndb.Expando):
 	# TODO: change this
@@ -386,16 +387,20 @@ class GatewayApi(remote.Service):
 		      path='add-watch-user/{user}/{listing_id}',
 		      http_method='POST', name='listings.addWatchUser')
     def add_watch_user(self,request):
-	# Add the given user to the list of providers for that listing
-	# Find listing by ID
+	
 	try:
-		listing = ndb.Key( 'modelListing',int(request.listing_id) ).get()
+		userResult = user.query(user.username == request.user).get()
 	except Exception,e:
 		raise endpoints.BadRequestException('Cannot retrieve listing')
 
-	listing.providers.append(request.user)
-	listing.put()
+	for item in userResult.watchedListings:
+		if (item == request.listing_id):
+			return messageBool(boolResult=0)
+
+	userResult.watchedListings.append(request.listing_id)
+	userResult.put()
 	return messageBool(boolResult=1)
+		
 
 
     # Endpoints method for sending a notification email
@@ -424,12 +429,16 @@ class GatewayApi(remote.Service):
                       name='listings.getWatchByUser')
     def get_watch_by_user(self,request):	
 	try:
-		results = modelListing.query( modelListing.providers.IN(request.id) )
+		userResult = user.query( user.username == request.id ).get()
+		results = userResult.watchedListings
 	except search.Error:
 		logging.exception('Search for listings failed')
 		raise endpoints.BadRequestException('Cannot retrieve listings')
 
-	listResults = [list_to_message(entity) for entity in results]
+	listResults = []
+	for item in results:
+		listResults.append( list_to_message(ndb.Key( 'modelListing',int(item) ).get() ) )
+
 	return ListingList(listings=listResults,boolResult=1)
 
     # Resource for rating a user

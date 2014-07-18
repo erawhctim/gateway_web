@@ -67,6 +67,11 @@ myApp.factory('AuthService',
 					$rootScope.myListResults = resp.listings;
 					$rootScope.$apply();
 		    		});
+
+				gapi.client.gateway.listings.getWatchByUser({'id':$rootScope.authService.currentUser()}).execute(function(resp) {
+					$rootScope.myWatchResults = resp.listings;
+					$rootScope.$apply();
+				});
                 	}
 		});
 

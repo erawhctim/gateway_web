@@ -46,6 +46,11 @@ myApp.controller('SidebarCtrl', ['$scope' , '$state', '$rootScope', function($sc
 				$rootScope.myListResults = resp.listings;
 				$rootScope.$apply();
 			});
+
+			gapi.client.gateway.listings.getWatchByUser({'id':$rootScope.authService.currentUser()}).execute(function(resp) {
+				$rootScope.myWatchResults = resp.listings;
+				$rootScope.$apply();
+			});
 		}
 	};
 
@@ -86,6 +91,21 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 		$state.transitionTo('listing-page');
 		gapi.client.gateway.listings.getListById({'idx':documentId}).execute(function(resp) {
 			$rootScope.selectedListing = resp;
+			$rootScope.watchingPost = false;
+			$rootScope.watch_text = "Watch Post";
+			//$rootScope.myStyle = {'background-color':default};
+			for(i=0;i<$rootScope.myListResults.length;i++)
+			{
+				if($rootScope.myListResults[i].list_id == resp.list_id)
+				{
+					$rootScope.watchingPost = true;
+					$rootScope.myStyle={'background-color':'green'};
+					$rootScope.watch_text = "Unwatch Post";
+					
+					break;
+				}
+
+			}
 			$rootScope.$apply();
 		});
 	}
@@ -102,6 +122,11 @@ myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$
 			$rootScope.myListResults = resp.listings;
 			$rootScope.$apply();
 		});
+
+		gapi.client.gateway.listings.getWatchByUser({'id':$rootScope.authService.currentUser()}).execute(function(resp) {
+				$rootScope.myWatchResults = resp.listings;
+				$rootScope.$apply();
+		});
 	}
 
 	// individual listing page
@@ -110,8 +135,22 @@ myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$
 		$state.transitionTo('listing-page');
 		gapi.client.gateway.listings.getListById({'idx':documentId}).execute(function(resp) {
 			$rootScope.selectedListing = resp;
-			$rootScope.$apply();
+			$rootScope.watch_text = "Watch Post";
+			//$rootScope.myStyle = {'background-color':default};
+			for(i=0;i<$rootScope.myWatchResults.length;i++)
+			{
+				if($rootScope.myWatchResults[i].list_id == resp.list_id)
+				{
+					$rootScope.watchingPost = true;
+					$rootScope.myStyle={'background-color':'green'};
+					$rootScope.watch_text = "Unwatch Post";
+				
+					break;
+				}
+
+			}
 		});
+		$rootScope.$apply();
 	}
 }]);
 		
@@ -191,7 +230,12 @@ myApp.controller('NavCtrl', ['$scope', '$filter','$rootScope', function ($scope,
 	// NOT WORKING
 	gapi.client.gateway.listings.getListByUser({'id':$scope.authService.currentUser()}).execute(function(resp) {
 		$rootScope.myListResults = resp.listings;
-		$rootScope.$apply();
+		//$rootScope.$apply();
+	});
+
+	gapi.client.gateway.listings.getWatchByUser({'id':$rootScope.authService.currentUser()}).execute(function(resp) {
+				$rootScope.myWatchResults = resp.listings;
+				$rootScope.$apply();
 	});
 
     }
@@ -205,7 +249,6 @@ myApp.controller('SelectedListingCtrl',['$scope','$rootScope','$state', function
 		gapi.client.gateway.listings.addWatchUser({'user':$scope.authService.currentUser(),'listing_id':$rootScope.selectedListing.list_id}).execute();
 	}
 
-
 	$rootScope.moveToMessagePage = function()
 	{
 		$state.transitionTo('message');
@@ -213,6 +256,19 @@ myApp.controller('SelectedListingCtrl',['$scope','$rootScope','$state', function
 			$rootScope.Msgs = resp.instMsgs;
 			$rootScope.$apply();
 		});
+	}
+
+	$scope.addWatchUser = function()
+	{
+		$rootScope.watch_text = "Watch Post";
+		//$rootScope.myStyle = {'background-color':default};
+		gapi.client.gateway.listings.addWatchUser({'user':$scope.authService.currentUser(),'listing_id':$rootScope.selectedListing.list_id}).execute(function(resp){ 
+			if(resp.boolResult) {
+				$rootScope.watch_text = "Unwatch Post";
+				$rootScope.myStyle={'background-color':'green'};
+				$rootScope.$apply();
+			}
+		});	
 	}
 }]);
 
@@ -226,4 +282,14 @@ myApp.controller('MessageCtrl',
 	}
 
 }]);
+
+var colorSpan = element(by.css('span'));
+
+it('should check ng-style', function() {
+  expect(colorSpan.getCssValue('color')).toBe('rgba(0, 0, 0, 1)');
+  element(by.css('input[value=\'set color\']')).click();
+  expect(colorSpan.getCssValue('color')).toBe('rgba(255, 0, 0, 1)');
+  element(by.css('input[value=clear]')).click();
+  expect(colorSpan.getCssValue('color')).toBe('rgba(0, 0, 0, 1)');
+});
 
