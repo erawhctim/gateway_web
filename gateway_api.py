@@ -24,11 +24,6 @@ ANDROID_AUDIENCE = WEB_CLIENT_ID
 # User defined package
 package = 'gateway'
 
-# Entire database will use one index for now
-# TODO: Depracate this
-listIndex = search.Index(name="myListings")
-userIndex = search.Index(name="myUsers")
-
 ### Class definitions ###
 
 ## ndb entities ##
@@ -36,6 +31,8 @@ class user(ndb.Model):
 	username = ndb.StringProperty()
 	email = ndb.StringProperty()
 	password = ndb.StringProperty()
+	overallRanking = ndb.IntegerProperty()
+	numRankings = ndb.IntegerProperty()
 
 class modelListing(ndb.Expando):
 	# TODO: change this
@@ -115,27 +112,9 @@ class emailMessage(messages.Message):
 	recip = messages.StringField(2,required=True)
 	
 
-## Function definitions
+## Function definitions ##
 def inst_msg_to_rpc(im):
 	return instantMessage(userId=im.dest,content=im.content,origin=im.origin)
-
-# Remove all documents in the doc
-# TODO: depracate this
-def delete_all_documents(index_name):
-
-   	doc_index = search.Index(name=index_name)
-
-    	# looping because get_range by default returns up to 100 documents at a time
-    	while True:
-        	# Get a list of documents populating only the doc_id field and extract the ids.
-        	document_ids = [document.doc_id
-                        for document in doc_index.get_range(ids_only=True)]
-        	if not document_ids:
-            		break
-        	# Delete the documents for the given ids from the Index.
-        	doc_index.delete(document_ids)
-
-	return ListingIdx(idx=doc_index)
 
 # Method to convert a listing to a message so it may be returned
 def list_to_message(message):
@@ -174,7 +153,10 @@ def put_user_from_message(message):
 	temp = message.username
 	temp = user(username=message.username,
 		    email=message.email,
-		    password=getDigest(message.password))
+		    password=getDigest(message.password),
+		    overallRanking = 0,
+		    numRankings = 0
+		    )
 	temp_key = temp.put()
 	return message
 
@@ -268,20 +250,6 @@ class GatewayApi(remote.Service):
 	# Even if there are no listings, want to indicate search call worked
 	return ListingList(listings=listResults,boolResult=1)
 
-    # Endpoints method for deleting all listings
-    # TODO: depracate this after we delete all docs from ndb
-    @endpoints.method(message_types.VoidMessage, messageBool,
-                      path='deleteall', http_method='DELETE',
-                      name='listings.deleteAll')
-    def delete_all_listings(self,request):
-	try:
-		delete_all_documents("myListings")
-	except Exception,e:
-		logging.exception('Delete failed.')
-		raise endpoints.BadRequestException('Bad request')
-
-	return messageBool(boolResult=1)
-
 
     # Resource containter for deletion
     DELETE_RESOURCE = endpoints.ResourceContainer(
@@ -367,7 +335,6 @@ class GatewayApi(remote.Service):
 	return messageBool(boolResult=0)
 
     ## Messaging endpoints ##
-    # TODO: doesn't work, take it out if getting rid of messaging service
     # Endpoints method for posting a message
     @endpoints.method(instantMessage, messageBool,
 		path='send-message', http_method='POST',	
@@ -391,15 +358,21 @@ class GatewayApi(remote.Service):
 		name='messages.get')
     def get_messages(self,request):	
 	try:
-		results = instMsg.query( ndb.OR((instMsg.origin == request.origin and instMsg.dest == request.dest),(instMsg.origin == request.dest and instMsg.dest == request.origin)) )
+		# Find the messages between two parties
+		results = instMsg.query( 
+			ndb.OR( ndb.AND(instMsg.origin == request.origin, 						instMsg.dest   == request.dest),
+				ndb.AND(instMsg.origin == request.dest, 					instMsg.dest   == request.origin) 
+			      )
+		)
 	except Exception,e:
 		logging.exception('Message fetch failed')
 		raise endpoints.BadRequestException('Cannot retrieve messages')
 
-	#return messageList(instMsgs=None,boolResult=0)
+	# Raise HTTP error if there are no messages between the two parties
 	if results.count() == 0:
 		raise endpoints.NotFoundException('User not found')
 	else:
+		# Convert the instant messages to a protoRPC message
 		messageResults = [inst_msg_to_rpc(entity) for entity in results]
 		return messageList(instMsgs=messageResults,boolResult=1)
 
@@ -430,9 +403,10 @@ class GatewayApi(remote.Service):
 		      path='send-mail',
 		      http_method='POST', name='sendMail')
     def email_user(self,request):
-	# Find the owner's email
+	# Find the recipient's email
 	q = user.query(user.username == request.recip)
 	recipResult = q.get()
+	# Find the owner's email
 	q = user.query(user.username == request.user)
 	userResult = q.get()
 	try:
@@ -457,5 +431,26 @@ class GatewayApi(remote.Service):
 
 	listResults = [list_to_message(entity) for entity in results]
 	return ListingList(listings=listResults,boolResult=1)
+
+    # Resource for rating a user
+    RATING_RESOURCE = endpoints.ResourceContainer(
+	user=messages.StringField(1),
+	rating=messages.IntegerField(2))
+    # Endpoints method for ranking a user
+    @endpoints.method(RATING_RESOURCE,messageBool,
+			path='rate-user/{user}/{rating}',http_method='POST',
+			name='users.rateUser')
+    def rate_user(self,request):
+	# Multiply the current ranking by the amount of rankings, add the new ranking, divide by the number of rankings
+	try:
+		q = user.query(user.username == request.user)
+		result = q.get()
+		result.numRankings += 1
+		result.overallRanking = result.overallRanking*(result.numRankings-1)/result.numRankings + request.rating/result.numRankings
+		result.put()
+		return messageBool(boolResult=1)
+	except Exception,e:
+		raise endpoints.BadRequestException('Cannot retrieve listings')
+
 
 APPLICATION = endpoints.api_server([GatewayApi])

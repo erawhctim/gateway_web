@@ -2,7 +2,7 @@
 	<h1> {{selectedListing.title}} </h1>
 	
 	<span> 
-		<div ng-hide="selectedListing.owner == authService.currentUser()"> <button class="btn btn-default" class="active" ng-click='sendEmail(selectedListing.owner)' type="button">Watch Listing</button> </div>
+		<div ng-hide="selectedListing.owner == authService.currentUser()"> <button class="btn btn-default" class="active" ng-click="moveToMessagePage()" type="button">Watch Listing</button> </div>
 		<div> User: {{selectedListing.owner}}</div>
 		<div> What I need: {{selectedListing.description}}</div>
 		<div ng-if="selectedListing.date"> When I need it: {{selectedListing.date}}</div>

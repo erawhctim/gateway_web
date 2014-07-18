@@ -1,0 +1,16 @@
+<div ng-controller="MessageCtrl" class="under-nav col-lg-7">
+	<h1> Hello! {{selectedListing.owner}} </h1>
+
+		
+	
+	<div>
+		<div ng-if="Msgs.length > 0">
+			Messages:
+			<ul ng-repeat="mess in Msgs">
+				<text ng-if="mess.dest == authService.currentUser()"> I said: </text>
+				<text ng-hide="mess.dest ==authService.currentUser()"> {{mess.origin}} said: </text> {{mess.content}}
+			</ul>
+		</div> 
+	</div>
+
+</div>

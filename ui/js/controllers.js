@@ -197,24 +197,33 @@ myApp.controller('NavCtrl', ['$scope', '$filter','$rootScope', function ($scope,
     }
 }]);
 
-myApp.controller('SelectedListingCtrl',['$scope','$rootScope', function($scope,$rootScope) {
+myApp.controller('SelectedListingCtrl',['$scope','$rootScope','$state', function($scope,$rootScope,$state) {
 	$scope.sendEmail = function(recipient) {
 		// Find the owner's email
 		
 		gapi.client.gateway.sendMail({'user':$scope.authService.currentUser(),'recip':recipient}).execute();
 		gapi.client.gateway.listings.addWatchUser({'user':$scope.authService.currentUser(),'listing_id':$rootScope.selectedListing.list_id}).execute();
 	}
+
+
+	$rootScope.moveToMessagePage = function()
+	{
+		$state.transitionTo('message');
+		gapi.client.gateway.messages.get({'origin':$rootScope.authService.currentUser(),'dest':$rootScope.selectedListing.owner}).execute(function(resp){ 
+			$rootScope.Msgs = resp.instMsgs;
+			$rootScope.$apply();
+		});
+	}
 }]);
 
 
-myApp.controller('PlaygroundCtrl',
-    ['$scope', '$routeParams', '$http', function ($scope, $routeParams, $http) {
+myApp.controller('MessageCtrl',
+    ['$rootScope','$scope', function ($scope,$rootScope) {
 
+	$scope.sendMessage = function() {
 
-}]);
+		gapi.client.gateway.messages.send({'userId':$rootScope.selectedListing.owner,'content':'me','origin':$scope.authService.currentUser()}).execute();
+	}
 
-myApp.controller('createListCtrl',['$scope', function ($scope) {
-
-	
 }]);
 
