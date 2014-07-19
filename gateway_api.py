@@ -35,6 +35,9 @@ class user(ndb.Expando):
 	numRankings = ndb.IntegerProperty()
 	watchedListings = ndb.IntegerProperty(repeated=True)
 
+#class watchedListingsList(ndb.Model):
+	
+
 class modelListing(ndb.Expando):
 	# TODO: change this
 	date = ndb.StringProperty()
@@ -264,6 +267,17 @@ class GatewayApi(remote.Service):
     def delete_element(self,request):
 	if request.kind == 'listing':
 		ndb.Key('modelListing',int(request.id)).delete()
+		# Cycle through all users and find who is watching this post
+		q = user.query()
+		result = q.fetch()
+		for entity in result:
+			try:
+				if request.id in entity.watchedListings:
+					entity.watchedListings.remove(request.id)
+					entity.put()
+			except Exception,e:
+				logging.exception('No match')
+				return messageBool(boolResult=0)
 		return messageBool(boolResult=1)
 	if request.kind == 'user':
 		ndb.Key('user',int(request.id)).delete()
@@ -400,28 +414,32 @@ class GatewayApi(remote.Service):
 	userResult.watchedListings.append(request.listing_id)
 	userResult.put()
 	return messageBool(boolResult=1)
-		
 
 
-    # Endpoints method for sending a notification email
-    @endpoints.method(emailMessage,messageBool,
-		      path='send-mail',
-		      http_method='POST', name='sendMail')
-    def email_user(self,request):
-	# Find the recipient's email
-	q = user.query(user.username == request.recip)
-	recipResult = q.get()
-	# Find the owner's email
-	q = user.query(user.username == request.user)
-	userResult = q.get()
+    # Endpoints method for removing a listing from the user's watch list
+    @endpoints.method(USER_WATCH_RESOURCE,messageBool,
+		      path='delete-watch-user/{user}/{listing_id}',
+		      http_method='POST', name='listings.deleteWatchUser')
+    def delete_watch_user(self,request):
+	
 	try:
+		userResult = user.query(user.username == request.user).get()
+		userResult.watchedListings.remove(request.listing_id)
+		userResult.put()
+		recipResult = modelListing.query(modelListing.list_id == request.listing_id).get()
+		recip = recipResult.owner
+		# Get the owner's e-mail
+		result = user.query(user.username == recip).get()
+		recipEmail = result.email
+
 		mail.send_mail(sender=userResult.email,
-			to=recipResult.email,
+			to=recipEmail,
 			subject=request.user+" responded to your post!",
 			body=""" This is a notification from the Gateway team. Someone has responded to your posting. """)
+
 		return messageBool(boolResult=1)
 	except Exception,e:
-		raise endpoints.BadRequestException('Cannot send e-mail.')
+		raise endpoints.BadRequestException('Cannot retrieve listing')
 
     # Endpoints method for getting the watched posts for the current user
     @endpoints.method(UserId, ListingList,

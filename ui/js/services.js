@@ -92,18 +92,3 @@ myApp.factory('AuthService',
         };
     }
 );
-
-/*
-myApp.factory('messService',
-	function($rootScope) {
-		updateMessages:function(userId) {
-			// Get the messages
-			// Get current listings
-		    		gapi.client.gateway.listings.getMessagesByUsers({'myId':$rootScope.currentUser,'theirId':userId}).execute(function(resp) {
-					$rootScope.myListResults = resp.listings;
-					$rootScope.$apply();
-		    	});
-			// Update the screen
-		}
-	}
-);	*/

@@ -80,7 +80,7 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 	gapi.client.gateway.listings.searchListings(
 	{'search_keyword':keyword,'num_search_listings':'10'}).execute(function(resp) {
 			$scope.searchResults = resp.listings;
-			$scope.$apply();
+			//$scope.$apply();
 	});
 	$rootScope.hasSearched = true;
     }
@@ -101,7 +101,7 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 					$rootScope.watchingPost = true;
 					$rootScope.myStyle={'background-color':'green'};
 					$rootScope.watch_text = "Unwatch Post";
-					
+
 					break;
 				}
 
@@ -114,18 +114,18 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 
 // Controller for 
 myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$state,$rootScope) {
-	
+
 	// retrieve user listings
-	$rootScope.getMyListings = function()
+	$scope.getMyListings = function()
 	{
-		gapi.client.gateway.listings.getListByUser({'id':authService.currentUser()}).execute(function(resp) {
+		gapi.client.gateway.listings.getListByUser({'id':$scope.authService.currentUser()}).execute(function(resp) {
 			$rootScope.myListResults = resp.listings;
 			$rootScope.$apply();
 		});
 
-		gapi.client.gateway.listings.getWatchByUser({'id':$rootScope.authService.currentUser()}).execute(function(resp) {
-				$rootScope.myWatchResults = resp.listings;
-				$rootScope.$apply();
+		gapi.client.gateway.listings.getWatchByUser({'id':$scope.authService.currentUser()}).execute(function(resp) {
+			$rootScope.myWatchResults = resp.listings;
+			$rootScope.$apply();
 		});
 	}
 
@@ -133,6 +133,7 @@ myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$
 	$scope.moveToListingPage = function(documentId)
 	{
 		$state.transitionTo('listing-page');
+		//$rootScope.listingTransition = true;
 		gapi.client.gateway.listings.getListById({'idx':documentId}).execute(function(resp) {
 			$rootScope.selectedListing = resp;
 			$rootScope.watch_text = "Watch Post";
@@ -144,16 +145,16 @@ myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$
 					$rootScope.watchingPost = true;
 					$rootScope.myStyle={'background-color':'green'};
 					$rootScope.watch_text = "Unwatch Post";
-				
+
 					break;
 				}
 
 			}
+			$rootScope.$apply();
 		});
-		$rootScope.$apply();
 	}
 }]);
-		
+
 
 myApp.controller('NavCtrl', ['$scope', '$filter','$rootScope', function ($scope, $filter, $rootScope) {
 
@@ -189,7 +190,7 @@ myApp.controller('NavCtrl', ['$scope', '$filter','$rootScope', function ($scope,
 		}
 	});
     }
-	
+
     // TODO: need to have this clear out the modal fields of a given modal
     $scope.clear = function () {
         $scope.title = null;
@@ -206,36 +207,27 @@ myApp.controller('NavCtrl', ['$scope', '$filter','$rootScope', function ($scope,
     };
 
     $scope.submitListing = function () {
-        var newItem = {
-            "title" : $scope.title,
-            "description" : $scope.description,
-            "owner" : $scope.authService.currentUser()
-        };
-
-        if ($scope.date) {
-            newItem["date"] = $filter('date')($scope.date, "MM/dd/yy")
-        }
 
 	gapi.client.gateway.listings.postListing(
-	{'date':newItem["date"],
-	'title':newItem["title"],
+	{'date':$scope.date,
+	'title':$scope.title,
 	//'location':document.querySelector('#listingAddr').value,
-	'description':newItem["description"],
-	'owner':newItem["owner"]
-	}).execute();
+	'description':$scope.description,
+	'owner':$scope.authService.currentUser()
+	}).execute( function() { ;
 
-        $scope.hide('#newListingModal');
+		$scope.hide('#newListingModal');
 
-	// Update listings
-	// NOT WORKING
-	gapi.client.gateway.listings.getListByUser({'id':$scope.authService.currentUser()}).execute(function(resp) {
-		$rootScope.myListResults = resp.listings;
-		//$rootScope.$apply();
-	});
+		// Update listings
+		gapi.client.gateway.listings.getListByUser({'id':$scope.authService.currentUser()}).execute(function(resp) {
+			$rootScope.myListResults = resp.listings;
+			$rootScope.$apply();
+		});
 
-	gapi.client.gateway.listings.getWatchByUser({'id':$rootScope.authService.currentUser()}).execute(function(resp) {
-				$rootScope.myWatchResults = resp.listings;
-				$rootScope.$apply();
+		gapi.client.gateway.listings.getWatchByUser({'id':$scope.authService.currentUser()}).execute(function(resp) {
+			$rootScope.myWatchResults = resp.listings;
+			$rootScope.$apply();
+		});
 	});
 
     }
@@ -244,7 +236,7 @@ myApp.controller('NavCtrl', ['$scope', '$filter','$rootScope', function ($scope,
 myApp.controller('SelectedListingCtrl',['$scope','$rootScope','$state', function($scope,$rootScope,$state) {
 	$scope.sendEmail = function(recipient) {
 		// Find the owner's email
-		
+
 		gapi.client.gateway.sendMail({'user':$scope.authService.currentUser(),'recip':recipient}).execute();
 		gapi.client.gateway.listings.addWatchUser({'user':$scope.authService.currentUser(),'listing_id':$rootScope.selectedListing.list_id}).execute();
 	}
@@ -282,14 +274,3 @@ myApp.controller('MessageCtrl',
 	}
 
 }]);
-
-var colorSpan = element(by.css('span'));
-
-it('should check ng-style', function() {
-  expect(colorSpan.getCssValue('color')).toBe('rgba(0, 0, 0, 1)');
-  element(by.css('input[value=\'set color\']')).click();
-  expect(colorSpan.getCssValue('color')).toBe('rgba(255, 0, 0, 1)');
-  element(by.css('input[value=clear]')).click();
-  expect(colorSpan.getCssValue('color')).toBe('rgba(0, 0, 0, 1)');
-});
-

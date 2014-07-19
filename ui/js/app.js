@@ -82,6 +82,14 @@ myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTSer
         // when user logs in, redirect to home
         if ($rootScope.authService.authorized()) {
             $location.path("/");
+	    gapi.client.gateway.listings.getListByUser({'id':currentUser}).execute(function(resp) {
+		$rootScope.myListResults = resp.listings;
+	    });
+
+            gapi.client.gateway.listings.getWatchByUser({'id':$rootScope.authService.currentUser()}).execute(function(resp) {
+		$rootScope.myWatchResults = resp.listings;
+		$rootScope.$apply();
+	    });
         }
 
         // when user logs out, redirect to home
@@ -89,13 +97,5 @@ myApp.run(function ($rootScope, $location, $http, $timeout, AuthService, RESTSer
             $location.path("/");
         }
     });
-
-    // so the listings will change in real time after posting
-    /*$rootScope.$watch('myListResults', function() {
-	gapi.client.gateway.listings.getListByUser({'id':$rootScope.authService.currentUser()}).execute(function(resp) {
-			$rootScope.myListResults = resp.listings;
-			$rootScope.$apply();
-		});
-    });*/
 
 });
