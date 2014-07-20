@@ -2,7 +2,7 @@
     <div class="sidebar under-nav">
         <!-- side nav items -->
         <ul class="nav nav-pills nav-stacked" ng-controller="SidebarCtrl" ng-show="authService.isLoggedIn() && getActivePage('home')==null"> 
-            <li ng-class="getActivePage('logged-in')"><a href="" ng-click="setPage('logged-in')">Home</a></li>
+            <li ng-class="getActivePage('logged-in')"><a href="" ng-click="setPage('logged-in')">My Homepage</a></li>
 	    <li ng-class="getActivePage('search')"><a href="" ng-click="setPage('search')">Search Listings</a></li>
             <li ng-class="getActivePage('help')"><a href="" ng-click="setPage('help')">Help</a></li>
         </ul>

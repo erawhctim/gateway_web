@@ -2,7 +2,7 @@
 <div ng-controller="SearchCtrl" class="under-nav col-lg-7">
 	<div class="input-group input-group-lg search-bar">
 		<input type="text" class="form-control"
-	       ng-model="searchQuery" placeholder="What are you looking for?" id="searchKeyword">
+	       ng-model="searchQuery" placeholder="What are you looking for?" id="searchKeyword" ng-keyup="$event.keyCode == 13 && searchListings()">
 
 		<span class="input-group-btn">
 	    		<button class="btn btn-default enabled" ng-click='searchListings()' type="button">Search</button>
@@ -13,7 +13,7 @@
 	<div class="search-list">
 		<div>
 			<text ng-hide="searchResults.length > 0 || !hasSearched">
-				"{{searchQuery}}" returned no results.
+				"{{stringSearch}}" returned no results.
 			</text>
 		</div>
 		<div ng-if="searchResults.length > 0">

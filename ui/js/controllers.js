@@ -38,7 +38,10 @@ myApp.controller('SidebarCtrl', ['$scope' , '$state', '$rootScope', function($sc
 		$state.transitionTo(page);
 		// Used for knowing when to display "no results"
 		if(page != 'logged-in')
+		{
 			$rootScope.hasSearched = false;
+			$rootScope.stringSearch = null;
+		}
 		// Refresh user listings on home page
 		else
 		{
@@ -83,6 +86,8 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 			$scope.$apply();
 	});
 	$rootScope.hasSearched = true;
+	$rootScope.stringSearch = $scope.searchQuery;
+	
     }
 
     // individual listing page
@@ -92,6 +97,7 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 		gapi.client.gateway.listings.getListById({'idx':documentId}).execute(function(resp) {
 			$rootScope.selectedListing = resp;
 			$rootScope.watchingPost = false;
+			$rootScope.stringSearch = null;
 			$rootScope.watch_text = "Watch Post";
 			//$rootScope.myStyle = {'background-color':default};
 			if($rootScope.myListResults)
@@ -136,22 +142,24 @@ myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$
 	$scope.moveToListingPage = function(documentId)
 	{
 		$state.transitionTo('listing-page');
-		//$rootScope.listingTransition = true;
 		gapi.client.gateway.listings.getListById({'idx':documentId}).execute(function(resp) {
 			$rootScope.selectedListing = resp;
 			$rootScope.watch_text = "Watch Post";
 			//$rootScope.myStyle = {'background-color':default};
-			for(i=0;i<$rootScope.myWatchResults.length;i++)
+			if($rootScope.myWatchResults)
 			{
-				if($rootScope.myWatchResults[i].list_id == resp.list_id)
+				for(i=0;i<$rootScope.myWatchResults.length;i++)
 				{
-					$rootScope.watchingPost = true;
-					$rootScope.myStyle={'background-color':'green'};
-					$rootScope.watch_text = "Unwatch Post";
+					if($rootScope.myWatchResults[i].list_id == resp.list_id)
+					{
+						$rootScope.watchingPost = true;
+						$rootScope.myStyle={'background-color':'green'};
+						$rootScope.watch_text = "Unwatch Post";
 
-					break;
+						break;
+					}
+
 				}
-
 			}
 			$rootScope.$apply();
 		});
@@ -169,11 +177,6 @@ myApp.controller('NavCtrl', ['$scope', '$filter','$rootScope', function ($scope,
 
     // submit the new user form
     $scope.submitUserForm = function() {
-	var newUser = { 
-		"username" : $scope.newUsernameField,
-		"email" : $scope.newEmailField,
-		"password" : $scope.newPasswordField
-	};
 
 	var isValidUser = 0;
 	gapi.client.gateway.users.newUser( {
@@ -199,6 +202,13 @@ myApp.controller('NavCtrl', ['$scope', '$filter','$rootScope', function ($scope,
         $scope.title = null;
         $scope.description = null;
         $scope.date = null;
+	$scope.email = null;
+	$scope.username = null;
+	$scope.password = null;
+	$scope.newEmailField = null;
+	$scope.newUsernameField = null;
+	$scope.newPasswordField = null;
+	$scope.confirmPassword = null;
     }
 
     $scope.show = function (thisModal) {
@@ -206,6 +216,7 @@ myApp.controller('NavCtrl', ['$scope', '$filter','$rootScope', function ($scope,
         $(thisModal).modal('show');
     };
     $scope.hide = function (thisModal) {
+	$scope.clear();
         $(thisModal).modal('hide');
     };
 
@@ -237,12 +248,6 @@ myApp.controller('NavCtrl', ['$scope', '$filter','$rootScope', function ($scope,
 }]);
 
 myApp.controller('SelectedListingCtrl',['$scope','$rootScope','$state', function($scope,$rootScope,$state) {
-	$scope.sendEmail = function(recipient) {
-		// Find the owner's email
-
-		gapi.client.gateway.sendMail({'user':$scope.authService.currentUser(),'recip':recipient}).execute();
-		gapi.client.gateway.listings.addWatchUser({'user':$scope.authService.currentUser(),'listing_id':$rootScope.selectedListing.list_id}).execute();
-	}
 
 	$rootScope.moveToMessagePage = function()
 	{
@@ -263,6 +268,18 @@ myApp.controller('SelectedListingCtrl',['$scope','$rootScope','$state', function
 				$rootScope.myStyle={'background-color':'green'};
 				$rootScope.$apply();
 			}
+		});	
+	}
+
+	$scope.deleteListing = function()
+	{
+		gapi.client.gateway.deleteElement({'kind':'listing','id':$rootScope.selectedListing.list_id}).execute(function() {
+			// Update listings
+			gapi.client.gateway.listings.getListByUser({'id':$scope.authService.currentUser()}).execute(function(response) {
+				$rootScope.myListResults = response.listings;
+				$state.transitionTo('logged-in');
+				$rootScope.$apply();
+			});
 		});	
 	}
 }]);
