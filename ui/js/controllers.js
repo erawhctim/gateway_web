@@ -80,7 +80,7 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 	gapi.client.gateway.listings.searchListings(
 	{'search_keyword':keyword,'num_search_listings':'10'}).execute(function(resp) {
 			$scope.searchResults = resp.listings;
-			//$scope.$apply();
+			$scope.$apply();
 	});
 	$rootScope.hasSearched = true;
     }
@@ -94,17 +94,20 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 			$rootScope.watchingPost = false;
 			$rootScope.watch_text = "Watch Post";
 			//$rootScope.myStyle = {'background-color':default};
-			for(i=0;i<$rootScope.myListResults.length;i++)
+			if($rootScope.myListResults)
 			{
-				if($rootScope.myListResults[i].list_id == resp.list_id)
+				for(i=0;i<$rootScope.myListResults.length;i++)
 				{
-					$rootScope.watchingPost = true;
-					$rootScope.myStyle={'background-color':'green'};
-					$rootScope.watch_text = "Unwatch Post";
+					if($rootScope.myListResults[i].list_id == resp.list_id)
+					{
+						$rootScope.watchingPost = true;
+						$rootScope.myStyle={'background-color':'green'};
+						$rootScope.watch_text = "Unwatch Post";
 
-					break;
+						break;
+					}
+
 				}
-
 			}
 			$rootScope.$apply();
 		});

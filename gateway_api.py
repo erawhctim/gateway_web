@@ -413,6 +413,16 @@ class GatewayApi(remote.Service):
 
 	userResult.watchedListings.append(request.listing_id)
 	userResult.put()
+	recipResult = modelListing.query(modelListing.list_id == request.listing_id).get()
+	recip = recipResult.owner
+	# Get the owner's e-mail
+	result = user.query(user.username == recip).get()
+	recipEmail = result.email
+
+	mail.send_mail(sender=userResult.email,
+		to=recipEmail,
+		subject=request.user+" responded to your post!",
+		body=""" This is a notification from the Gateway team. Someone has responded to your posting. """)
 	return messageBool(boolResult=1)
 
 
@@ -426,16 +436,6 @@ class GatewayApi(remote.Service):
 		userResult = user.query(user.username == request.user).get()
 		userResult.watchedListings.remove(request.listing_id)
 		userResult.put()
-		recipResult = modelListing.query(modelListing.list_id == request.listing_id).get()
-		recip = recipResult.owner
-		# Get the owner's e-mail
-		result = user.query(user.username == recip).get()
-		recipEmail = result.email
-
-		mail.send_mail(sender=userResult.email,
-			to=recipEmail,
-			subject=request.user+" responded to your post!",
-			body=""" This is a notification from the Gateway team. Someone has responded to your posting. """)
 
 		return messageBool(boolResult=1)
 	except Exception,e:
