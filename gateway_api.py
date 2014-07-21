@@ -12,6 +12,7 @@ from google.appengine.api import search
 from google.appengine.api import mail
 import logging
 import hashlib
+import re
 
 # Online ID
 WEB_CLIENT_ID = '609564210575-hv0i5mf6cleccjikfre5kl6uc2jamrsl.apps.googleusercontent.com'
@@ -174,6 +175,10 @@ def put_inst_message(message):
 # Hash the password
 def getDigest(password):
 	return hashlib.sha256(password).hexdigest()
+
+# check if a search query matches a larger string
+def matches(query, inside):
+    return re.search(query, inside, re.IGNORECASE);    
 	
 ###############################################################################
 # Endpoints gateway API
@@ -231,30 +236,36 @@ class GatewayApi(remote.Service):
     # Resource container for search field
     KEYWORD_RESOURCE = endpoints.ResourceContainer(
 		message_types.VoidMessage,
-		search_keyword=messages.StringField(1),
-		num_search_listings=messages.IntegerField(2))
+		search_keyword=messages.StringField(1))
 
     # Endpoints method for getting listings based on keyword search
     @endpoints.method(KEYWORD_RESOURCE, ListingList,
-                      path='searchlistings/{search_keyword}/{num_search_listings}', http_method='GET',
+                      path='searchlistings/{search_keyword}', http_method='GET',
                       name='listings.searchListings')
     # Search by keyword using Google API
     def keyword_search(self,request):
-	q = modelListing.query(modelListing.title.IN([request.search_keyword]))
-	# Try searching given the query above	
-	try:
-		#results = q.get()
-		listResults = [list_to_message(entity) for entity in q]
-	# Calling the API failed
-	# TODO: check this works	
-	except search.Error:
-		logging.exception('Search failed')
-		raise endpoints.BadRequestException('Bad search request')
+        query = request.search_keyword
 
-	# Even if there are no listings, want to indicate search call worked
-	return ListingList(listings=listResults,boolResult=1)
+        #TODO: split up query by spaces, check for all
 
+        try:
+            # get all listings first, then filter based on search query
+            listings = modelListing.query().fetch()
+            results = []
 
+            if (query):
+                listings = [listing for listing in listings
+                            if (matches(query, listing.title) or 
+                                matches(query, listing.description))]
+
+            for listing in listings:
+                results.append(list_to_message(listing))
+
+            return ListingList(listings=results,boolResult=1)
+        except Exception,e:
+            logging.error('Exception: ' + str(e))
+            raise endpoints.BadRequestException('Cannot retrieve search results')
+	
     # Resource containter for deletion
     DELETE_RESOURCE = endpoints.ResourceContainer(
 		kind=messages.StringField(1),
