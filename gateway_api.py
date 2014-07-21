@@ -477,14 +477,9 @@ class GatewayApi(remote.Service):
         recipEmail = result.email
 
         subj = request.user+" responded to your post!"
-        msg = "Hi, " + recip + "<br><br>" + request.user + " has offered to help you out, awesome!<br>" +\
-              "You can reply to this email with more information, and your response will be sent directly to " + userResult.username + "."
-
-        logging.info("sending email:")
-        logging.info("-from " + userResult.email)
-        logging.info("-to " + recipEmail)
-        logging.info("-subject " + subj)
-        logging.info("-body " + msg)
+        msg = "Hi there, " + recip + ":  " +\
+              request.user + " has offered to help you out, awesome! " +\
+              "You can reply to this email with more information, and your response will be sent directly to " + userResult.username
 
         mail.send_mail(sender=userResult.email,
             to=recipEmail,
