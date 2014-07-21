@@ -98,8 +98,8 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 			$rootScope.selectedListing = resp;
 			$rootScope.watchingPost = false;
 			$rootScope.stringSearch = null;
-			$rootScope.watch_text = "I can help";
-			//$rootScope.myStyle = {'background-color':default};
+			$rootScope.watch_text = "Email poster";
+			$rootScope.myStyle = {'background-color':'default'};
 			if($rootScope.myListResults)
 			{
 				for(i=0;i<$rootScope.myListResults.length;i++)
@@ -108,7 +108,7 @@ myApp.controller('SearchCtrl', ['$scope','$rootScope','$state', function ($scope
 					{
 						$rootScope.watchingPost = true;
 						$rootScope.myStyle={'background-color':'green'};
-						//$rootScope.watch_text = "Unwatch Post";
+						$rootScope.watch_text = "Emailed!";
 
 						break;
 					}
@@ -144,8 +144,8 @@ myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$
 		$state.transitionTo('listing-page');
 		gapi.client.gateway.listings.getListById({'idx':documentId}).execute(function(resp) {
 			$rootScope.selectedListing = resp;
-			$rootScope.watch_text = "I can help";
-			//$rootScope.myStyle = {'background-color':default};
+			$rootScope.watch_text = "Email poster";
+			$rootScope.myStyle = {'background-color':'default'};
 			if($rootScope.myWatchResults)
 			{
 				for(i=0;i<$rootScope.myWatchResults.length;i++)
@@ -154,7 +154,7 @@ myApp.controller('myListCtrl',['$scope','$state','$rootScope', function($scope,$
 					{
 						$rootScope.watchingPost = true;
 						$rootScope.myStyle={'background-color':'green'};
-						//$rootScope.watch_text = "Unwatch Post";
+						$rootScope.watch_text = "Emailed!";
 
 						break;
 					}
@@ -260,11 +260,11 @@ myApp.controller('SelectedListingCtrl',['$scope','$rootScope','$state', function
 
 	$scope.addWatchUser = function()
 	{
-		$rootScope.watch_text = "I can help";
-		//$rootScope.myStyle = {'background-color':default};
+		$rootScope.watch_text = "Email poster";
+		$rootScope.myStyle = {'background-color':'default'};
 		gapi.client.gateway.listings.addWatchUser({'user':$scope.authService.currentUser(),'listing_id':$rootScope.selectedListing.list_id}).execute(function(resp){ 
 			if(resp.boolResult) {
-				//$rootScope.watch_text = "Unwatch Post";
+				$rootScope.watch_text = "Emailed!";
 				$rootScope.myStyle={'background-color':'green'};
 				$rootScope.$apply();
 			}
