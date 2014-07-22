@@ -188,7 +188,7 @@ myApp.controller('NavCtrl', ['$scope', '$filter','$rootScope', function ($scope,
 		if(isValidUser)
 		{
 			// Login with the same credentials
-			$scope.authService.login($scope.newUsernameField,$scope.newPasswordField);
+			$rootScope.authService.login($scope.newUsernameField,$scope.newPasswordField);
 		}
 		else
 		{
